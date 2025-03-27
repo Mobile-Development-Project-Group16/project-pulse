@@ -42,7 +42,8 @@ fun AuthScreen(
             value = formState.email,
             onValueChange = viewModel::updateEmail,
             label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            isError = formState.error != null
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -52,7 +53,8 @@ fun AuthScreen(
             onValueChange = viewModel::updatePassword,
             label = { Text("Password") },
             visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            isError = formState.error != null
         )
 
         if (formState.isRegistering) {
@@ -99,26 +101,26 @@ fun AuthScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        TextButton(
-            onClick = viewModel::toggleRegisterMode,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                if (formState.isRegistering)
-                    "Already have an account? Login"
-                else
-                    "Don't have an account? Register"
-            )
-        }
-
         formState.error?.let { error ->
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = error,
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TextButton(
+            onClick = viewModel::toggleAuthMode,
+            enabled = !formState.isLoading
+        ) {
+            Text(
+                if (formState.isRegistering)
+                    "Already have an account? Login"
+                else
+                    "Don't have an account? Register"
             )
         }
     }

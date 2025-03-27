@@ -16,13 +16,7 @@ import com.bda.projectpulse.ui.projects.CreateEditProjectScreen
 import com.bda.projectpulse.ui.projects.ProjectDetailsScreen
 import com.bda.projectpulse.ui.tasks.TaskListScreen
 import com.bda.projectpulse.ui.tasks.CreateEditTaskScreen
-
-// Add these routes to the sealed class
-object TaskList : Screen("tasks")
-object CreateTask : Screen("tasks/create")
-object EditTask : Screen("tasks/{taskId}/edit") {
-    fun createRoute(taskId: String) = "tasks/$taskId/edit"
-}
+import com.bda.projectpulse.ui.profile.ProfileScreen
 
 @Composable
 fun AppNavigation(
@@ -205,6 +199,19 @@ fun AppNavigation(
                 onSave = {
                     // TODO: Implement task update
                     navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Screen.Profile.route) {
+            ProfileScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onSignOut = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }

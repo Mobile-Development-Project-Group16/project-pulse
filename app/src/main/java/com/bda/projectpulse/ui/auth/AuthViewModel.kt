@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bda.projectpulse.auth.FirebaseAuthManager
+import com.bda.projectpulse.models.User
 import com.bda.projectpulse.models.UserRole
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,11 +12,27 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+data class AuthFormState(
+    val email: String = "",
+    val password: String = "",
+    val displayName: String = "",
+    val role: UserRole = UserRole.TEAM_MEMBER,
+    val isRegistering: Boolean = false,
+    val isLoading: Boolean = false,
+    val error: String? = null
+)
+
+sealed class AuthState {
+    object Unauthenticated : AuthState()
+    data class Authenticated(val user: User) : AuthState()
+    data class Error(val message: String) : AuthState()
+}
+
 class AuthViewModel : ViewModel() {
     private val authManager = FirebaseAuthManager.getInstance()
     private val TAG = "AuthViewModel"
     
-    private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
     
     private val _formState = MutableStateFlow(AuthFormState())
@@ -25,24 +42,33 @@ class AuthViewModel : ViewModel() {
     val availableRoles: StateFlow<List<UserRole>> = _availableRoles.asStateFlow()
 
     init {
-        checkAuthState()
+        viewModelScope.launch {
+            try {
+                authManager.getCurrentUser()?.let { firebaseUser ->
+                    val user = authManager.getUserData(firebaseUser.uid)
+                    _authState.value = AuthState.Authenticated(user)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error getting user data", e)
+            }
+        }
         checkAdminUser()
     }
 
     private fun checkAuthState() {
-        val currentUser = authManager.getCurrentUser()
-        if (currentUser != null) {
-            viewModelScope.launch {
-                try {
+        viewModelScope.launch {
+            try {
+                val currentUser = authManager.getCurrentUser()
+                if (currentUser != null) {
                     val user = authManager.getUserData(currentUser.uid)
                     _authState.value = AuthState.Authenticated(user)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error checking auth state", e)
-                    _authState.value = AuthState.Error(e.message ?: "Failed to get user data")
+                } else {
+                    _authState.value = AuthState.Unauthenticated
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error checking auth state", e)
+                _authState.value = AuthState.Error(e.message ?: "Failed to get user data")
             }
-        } else {
-            _authState.value = AuthState.Unauthenticated
         }
     }
 
@@ -82,14 +108,17 @@ class AuthViewModel : ViewModel() {
         _formState.update { it.copy(role = role) }
     }
 
-    fun toggleRegisterMode() {
-        _formState.update { it.copy(isRegistering = !it.isRegistering) }
+    fun toggleAuthMode() {
+        _formState.update { it.copy(
+            isRegistering = !it.isRegistering,
+            error = null
+        ) }
     }
 
     fun signIn() {
         viewModelScope.launch {
-            _formState.update { it.copy(isLoading = true, error = null) }
             try {
+                _formState.update { it.copy(isLoading = true, error = null) }
                 val result = authManager.signIn(
                     _formState.value.email,
                     _formState.value.password
@@ -99,29 +128,27 @@ class AuthViewModel : ViewModel() {
                         _authState.value = AuthState.Authenticated(user)
                     },
                     onFailure = { e ->
-                        Log.e(TAG, "Sign in failed", e)
-                        _formState.update { it.copy(error = e.message) }
+                        _formState.update { it.copy(
+                            isLoading = false,
+                            error = e.message ?: "Authentication failed"
+                        ) }
+                        _authState.value = AuthState.Error(e.message ?: "Authentication failed")
                     }
                 )
-            } finally {
-                _formState.update { it.copy(isLoading = false) }
+            } catch (e: Exception) {
+                _formState.update { it.copy(
+                    isLoading = false,
+                    error = e.message ?: "Authentication failed"
+                ) }
+                _authState.value = AuthState.Error(e.message ?: "Authentication failed")
             }
         }
     }
 
     fun signUp() {
         viewModelScope.launch {
-            _formState.update { it.copy(isLoading = true, error = null) }
             try {
-                // Double-check if admin role is allowed
-                if (_formState.value.role == UserRole.ADMIN) {
-                    val hasAdmin = authManager.hasAdminUser()
-                    if (hasAdmin) {
-                        _formState.update { it.copy(error = "Admin user already exists") }
-                        return@launch
-                    }
-                }
-
+                _formState.update { it.copy(isLoading = true, error = null) }
                 val result = authManager.signUp(
                     _formState.value.email,
                     _formState.value.password,
@@ -130,16 +157,22 @@ class AuthViewModel : ViewModel() {
                 )
                 result.fold(
                     onSuccess = { user ->
-                        Log.d(TAG, "User registered successfully with role: ${user.role}")
                         _authState.value = AuthState.Authenticated(user)
                     },
                     onFailure = { e ->
-                        Log.e(TAG, "Sign up failed", e)
-                        _formState.update { it.copy(error = e.message) }
+                        _formState.update { it.copy(
+                            isLoading = false,
+                            error = e.message ?: "Registration failed"
+                        ) }
+                        _authState.value = AuthState.Error(e.message ?: "Registration failed")
                     }
                 )
-            } finally {
-                _formState.update { it.copy(isLoading = false) }
+            } catch (e: Exception) {
+                _formState.update { it.copy(
+                    isLoading = false,
+                    error = e.message ?: "Registration failed"
+                ) }
+                _authState.value = AuthState.Error(e.message ?: "Registration failed")
             }
         }
     }
