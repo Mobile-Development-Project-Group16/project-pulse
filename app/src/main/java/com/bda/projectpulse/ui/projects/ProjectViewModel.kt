@@ -42,12 +42,13 @@ class ProjectViewModel(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
+                _error.value = null
                 projectRepository.getProjects().collect { projects ->
                     _projects.value = projects
+                    _isLoading.value = false
                 }
             } catch (e: Exception) {
                 _error.value = e.message
-            } finally {
                 _isLoading.value = false
             }
         }
@@ -56,14 +57,11 @@ class ProjectViewModel(
     private fun loadUsers() {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
                 userRepository.getUsers().collect { users ->
                     _users.value = users
                 }
             } catch (e: Exception) {
                 _error.value = e.message
-            } finally {
-                _isLoading.value = false
             }
         }
     }
@@ -71,14 +69,11 @@ class ProjectViewModel(
     fun loadProjectById(projectId: String) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
                 projectRepository.getProjectById(projectId).collect { project ->
                     _selectedProject.value = project
                 }
             } catch (e: Exception) {
                 _error.value = e.message
-            } finally {
-                _isLoading.value = false
             }
         }
     }
@@ -87,10 +82,15 @@ class ProjectViewModel(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                projectRepository.createProject(project)
+                _error.value = null
+                projectRepository.createProject(project).onSuccess {
+                    _isLoading.value = false
+                }.onFailure { e ->
+                    _error.value = e.message
+                    _isLoading.value = false
+                }
             } catch (e: Exception) {
                 _error.value = e.message
-            } finally {
                 _isLoading.value = false
             }
         }
@@ -100,10 +100,15 @@ class ProjectViewModel(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                projectRepository.updateProject(projectId, project)
+                _error.value = null
+                projectRepository.updateProject(projectId, project).onSuccess {
+                    _isLoading.value = false
+                }.onFailure { e ->
+                    _error.value = e.message
+                    _isLoading.value = false
+                }
             } catch (e: Exception) {
                 _error.value = e.message
-            } finally {
                 _isLoading.value = false
             }
         }
@@ -113,10 +118,15 @@ class ProjectViewModel(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                projectRepository.deleteProject(projectId)
+                _error.value = null
+                projectRepository.deleteProject(projectId).onSuccess {
+                    _isLoading.value = false
+                }.onFailure { e ->
+                    _error.value = e.message
+                    _isLoading.value = false
+                }
             } catch (e: Exception) {
                 _error.value = e.message
-            } finally {
                 _isLoading.value = false
             }
         }
@@ -126,10 +136,15 @@ class ProjectViewModel(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                projectRepository.updateProjectStatus(projectId, status)
+                _error.value = null
+                projectRepository.updateProjectStatus(projectId, status).onSuccess {
+                    _isLoading.value = false
+                }.onFailure { e ->
+                    _error.value = e.message
+                    _isLoading.value = false
+                }
             } catch (e: Exception) {
                 _error.value = e.message
-            } finally {
                 _isLoading.value = false
             }
         }
@@ -139,10 +154,15 @@ class ProjectViewModel(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                projectRepository.addTeamMember(projectId, userId)
+                _error.value = null
+                projectRepository.addTeamMember(projectId, userId).onSuccess {
+                    _isLoading.value = false
+                }.onFailure { e ->
+                    _error.value = e.message
+                    _isLoading.value = false
+                }
             } catch (e: Exception) {
                 _error.value = e.message
-            } finally {
                 _isLoading.value = false
             }
         }
@@ -152,10 +172,15 @@ class ProjectViewModel(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                projectRepository.removeTeamMember(projectId, userId)
+                _error.value = null
+                projectRepository.removeTeamMember(projectId, userId).onSuccess {
+                    _isLoading.value = false
+                }.onFailure { e ->
+                    _error.value = e.message
+                    _isLoading.value = false
+                }
             } catch (e: Exception) {
                 _error.value = e.message
-            } finally {
                 _isLoading.value = false
             }
         }
@@ -163,5 +188,9 @@ class ProjectViewModel(
 
     fun clearError() {
         _error.value = null
+    }
+
+    fun clearSelectedProject() {
+        _selectedProject.value = null
     }
 } 

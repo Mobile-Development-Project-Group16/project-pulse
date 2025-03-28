@@ -27,8 +27,10 @@ fun ProjectListScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
 
-    LaunchedEffect(Unit) {
-        viewModel.loadProjects()
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.clearSelectedProject()
+        }
     }
 
     Scaffold(
@@ -49,19 +51,33 @@ fun ProjectListScreen(
                 .padding(padding)
         ) {
             when {
-                isLoading -> {
+                isLoading && projects.isEmpty() -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
                 error != null -> {
-                    Text(
-                        text = error ?: "Unknown error occurred",
-                        color = MaterialTheme.colorScheme.error,
+                    Column(
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .padding(16.dp)
-                    )
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = error ?: "Unknown error occurred",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Button(
+                            onClick = { 
+                                viewModel.clearError()
+                                viewModel.loadProjects() 
+                            }
+                        ) {
+                            Text("Retry")
+                        }
+                    }
                 }
                 projects.isEmpty() -> {
                     Text(
@@ -78,7 +94,10 @@ fun ProjectListScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(projects) { project ->
+                        items(
+                            items = projects,
+                            key = { project -> project.id }
+                        ) { project ->
                             ProjectCard(
                                 project = project,
                                 onEdit = { onNavigateToEditProject(project.id) },

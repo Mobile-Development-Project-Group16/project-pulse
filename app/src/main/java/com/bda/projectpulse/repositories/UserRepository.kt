@@ -24,7 +24,27 @@ class UserRepository(
                 }
 
                 val users = snapshot?.documents?.mapNotNull { doc ->
-                    doc.toObject(User::class.java)?.copy(uid = doc.id)
+                    try {
+                        val data = doc.data
+                        if (data != null) {
+                            User(
+                                uid = doc.id,
+                                email = data["email"] as? String ?: "",
+                                displayName = data["displayName"] as? String ?: "",
+                                role = data["role"]?.let { role -> 
+                                    try {
+                                        com.bda.projectpulse.models.UserRole.valueOf(role.toString())
+                                    } catch (e: Exception) {
+                                        com.bda.projectpulse.models.UserRole.USER
+                                    }
+                                } ?: com.bda.projectpulse.models.UserRole.USER,
+                                createdAt = (data["createdAt"] as? com.google.firebase.Timestamp) ?: Timestamp.now(),
+                                updatedAt = (data["updatedAt"] as? com.google.firebase.Timestamp) ?: Timestamp.now()
+                            )
+                        } else null
+                    } catch (e: Exception) {
+                        null
+                    }
                 } ?: emptyList()
 
                 trySend(users)
@@ -35,7 +55,25 @@ class UserRepository(
 
     suspend fun getUserById(userId: String): Result<User?> = try {
         val doc = usersCollection.document(userId).get().await()
-        Result.success(doc.toObject(User::class.java)?.copy(uid = doc.id))
+        val data = doc.data
+        Result.success(
+            if (data != null) {
+                User(
+                    uid = doc.id,
+                    email = data["email"] as? String ?: "",
+                    displayName = data["displayName"] as? String ?: "",
+                    role = data["role"]?.let { role -> 
+                        try {
+                            com.bda.projectpulse.models.UserRole.valueOf(role.toString())
+                        } catch (e: Exception) {
+                            com.bda.projectpulse.models.UserRole.USER
+                        }
+                    } ?: com.bda.projectpulse.models.UserRole.USER,
+                    createdAt = (data["createdAt"] as? com.google.firebase.Timestamp) ?: Timestamp.now(),
+                    updatedAt = (data["updatedAt"] as? com.google.firebase.Timestamp) ?: Timestamp.now()
+                )
+            } else null
+        )
     } catch (e: Exception) {
         Result.failure(e)
     }

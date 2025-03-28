@@ -39,6 +39,7 @@ fun AppNavigation(
 
         composable(Screen.Projects.route) {
             ProjectListScreen(
+                viewModel = projectViewModel,
                 onNavigateToCreateProject = {
                     navController.navigate(Screen.CreateEditProject.route)
                 },
@@ -94,6 +95,7 @@ fun AppNavigation(
 
         composable(Screen.Tasks.route) {
             TaskListScreen(
+                viewModel = taskViewModel,
                 onNavigateToCreateTask = {
                     navController.navigate(Screen.CreateEditTask.route)
                 },
@@ -137,6 +139,9 @@ fun AppNavigation(
                     navController.navigate(Screen.Auth.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onNavigateBack = {
+                    navController.navigateUp()
                 }
             )
         }

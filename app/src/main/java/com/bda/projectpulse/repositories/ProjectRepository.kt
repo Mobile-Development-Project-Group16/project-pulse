@@ -26,7 +26,32 @@ class ProjectRepository(
                 }
 
                 val projects = snapshot?.documents?.mapNotNull { doc ->
-                    doc.toObject(Project::class.java)?.copy(id = doc.id)
+                    try {
+                        val data = doc.data
+                        if (data != null) {
+                            Project(
+                                id = doc.id,
+                                name = data["name"] as? String ?: "",
+                                description = data["description"] as? String ?: "",
+                                status = data["status"]?.let { status ->
+                                    try {
+                                        ProjectStatus.valueOf(status.toString())
+                                    } catch (e: Exception) {
+                                        ProjectStatus.PLANNING
+                                    }
+                                } ?: ProjectStatus.PLANNING,
+                                startDate = data["startDate"] as? Timestamp,
+                                endDate = data["endDate"] as? Timestamp,
+                                tags = (data["tags"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
+                                createdBy = data["createdBy"] as? String ?: "",
+                                createdAt = (data["createdAt"] as? Timestamp) ?: Timestamp.now(),
+                                updatedAt = (data["updatedAt"] as? Timestamp) ?: Timestamp.now(),
+                                teamMembers = (data["team_members"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
+                            )
+                        } else null
+                    } catch (e: Exception) {
+                        null
+                    }
                 } ?: emptyList()
 
                 trySend(projects)
@@ -44,7 +69,32 @@ class ProjectRepository(
                     return@addSnapshotListener
                 }
 
-                val project = snapshot?.toObject(Project::class.java)?.copy(id = snapshot.id)
+                val project = try {
+                    val data = snapshot?.data
+                    if (data != null) {
+                        Project(
+                            id = snapshot.id,
+                            name = data["name"] as? String ?: "",
+                            description = data["description"] as? String ?: "",
+                            status = data["status"]?.let { status ->
+                                try {
+                                    ProjectStatus.valueOf(status.toString())
+                                } catch (e: Exception) {
+                                    ProjectStatus.PLANNING
+                                }
+                            } ?: ProjectStatus.PLANNING,
+                            startDate = data["startDate"] as? Timestamp,
+                            endDate = data["endDate"] as? Timestamp,
+                            tags = (data["tags"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
+                            createdBy = data["createdBy"] as? String ?: "",
+                            createdAt = (data["createdAt"] as? Timestamp) ?: Timestamp.now(),
+                            updatedAt = (data["updatedAt"] as? Timestamp) ?: Timestamp.now(),
+                            teamMembers = (data["team_members"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
+                        )
+                    } else null
+                } catch (e: Exception) {
+                    null
+                }
                 trySend(project)
             }
 
@@ -62,7 +112,32 @@ class ProjectRepository(
                 }
 
                 val projects = snapshot?.documents?.mapNotNull { doc ->
-                    doc.toObject(Project::class.java)?.copy(id = doc.id)
+                    try {
+                        val data = doc.data
+                        if (data != null) {
+                            Project(
+                                id = doc.id,
+                                name = data["name"] as? String ?: "",
+                                description = data["description"] as? String ?: "",
+                                status = data["status"]?.let { status ->
+                                    try {
+                                        ProjectStatus.valueOf(status.toString())
+                                    } catch (e: Exception) {
+                                        ProjectStatus.PLANNING
+                                    }
+                                } ?: ProjectStatus.PLANNING,
+                                startDate = data["startDate"] as? Timestamp,
+                                endDate = data["endDate"] as? Timestamp,
+                                tags = (data["tags"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
+                                createdBy = data["createdBy"] as? String ?: "",
+                                createdAt = (data["createdAt"] as? Timestamp) ?: Timestamp.now(),
+                                updatedAt = (data["updatedAt"] as? Timestamp) ?: Timestamp.now(),
+                                teamMembers = (data["team_members"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
+                            )
+                        } else null
+                    } catch (e: Exception) {
+                        null
+                    }
                 } ?: emptyList()
 
                 trySend(projects)

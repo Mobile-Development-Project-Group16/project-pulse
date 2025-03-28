@@ -16,7 +16,7 @@ data class AuthFormState(
     val email: String = "",
     val password: String = "",
     val displayName: String = "",
-    val role: UserRole = UserRole.TEAM_MEMBER,
+    val role: UserRole = UserRole.USER,
     val isRegistering: Boolean = false,
     val isLoading: Boolean = false,
     val error: String? = null
@@ -79,14 +79,14 @@ class AuthViewModel : ViewModel() {
                 Log.d(TAG, "Checking for admin user. Has admin: $hasAdmin")
                 _availableRoles.value = if (hasAdmin) {
                     Log.d(TAG, "Admin exists, limiting available roles")
-                    listOf(UserRole.PROJECT_MANAGER, UserRole.TEAM_MEMBER)
+                    listOf(UserRole.MANAGER, UserRole.USER)
                 } else {
                     Log.d(TAG, "No admin exists, showing all roles")
                     UserRole.values().toList()
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error checking for admin user", e)
-                _availableRoles.value = listOf(UserRole.PROJECT_MANAGER, UserRole.TEAM_MEMBER)
+                _availableRoles.value = listOf(UserRole.MANAGER, UserRole.USER)
             }
         }
     }

@@ -145,23 +145,25 @@ class TaskRepository(
         Result.failure(e)
     }
 
-    suspend fun updateSubTask(taskId: String, subTask: Task.SubTask): Result<Unit> = try {
-        val taskDoc = tasksCollection.document(taskId).get().await()
-        val task = taskDoc.toObject(Task::class.java) ?: return Result.failure(Exception("Task not found"))
+    suspend fun updateSubTask(taskId: String, subTask: Task.SubTask): Result<Unit> {
+        return try {
+            val taskDoc = tasksCollection.document(taskId).get().await()
+            val task = taskDoc.toObject(Task::class.java) ?: return Result.failure(Exception("Task not found"))
 
-        val updatedSubTasks = task.subTasks.map { currentSubTask -> 
-            if (currentSubTask.id == subTask.id) subTask else currentSubTask 
+            val updatedSubTasks = task.subTasks.map { currentSubTask -> 
+                if (currentSubTask.id == subTask.id) subTask else currentSubTask 
+            }
+
+            tasksCollection.document(taskId)
+                .update(mapOf(
+                    "subTasks" to updatedSubTasks,
+                    "updatedAt" to Timestamp.now()
+                ))
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
-
-        tasksCollection.document(taskId)
-            .update(mapOf(
-                "subTasks" to updatedSubTasks,
-                "updatedAt" to Timestamp.now()
-            ))
-            .await()
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
     }
 
     suspend fun addAttachment(taskId: String, attachment: Task.Attachment): Result<Unit> = try {

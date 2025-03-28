@@ -166,7 +166,7 @@ fun CreateEditTaskScreen(
                     onClick = { showAssigneePicker = true },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(users.find { it.id == selectedAssigneeId }?.displayName ?: "Select Assignee")
+                    Text(users.find { it.uid == selectedAssigneeId }?.displayName ?: "Select Assignee")
                 }
             }
 
@@ -217,7 +217,7 @@ fun CreateEditTaskScreen(
                                 headlineContent = { Text(user.displayName) },
                                 supportingContent = { Text(user.email) },
                                 modifier = Modifier.clickable {
-                                    selectedAssigneeId = user.id
+                                    selectedAssigneeId = user.uid
                                     showAssigneePicker = false
                                 }
                             )
