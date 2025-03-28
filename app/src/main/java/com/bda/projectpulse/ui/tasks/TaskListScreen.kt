@@ -12,293 +12,160 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.bda.projectpulse.ui.components.StatusChip
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bda.projectpulse.models.Task
+import com.bda.projectpulse.models.TaskStatus
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskListScreen(
-    onTaskClick: (String) -> Unit,
-    onCreateTask: () -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateToCreateTask: () -> Unit,
+    onNavigateToEditTask: (String) -> Unit,
+    viewModel: TaskViewModel = viewModel()
 ) {
-    var selectedStatus by remember { mutableStateOf<String?>(null) }
-    var selectedPriority by remember { mutableStateOf<String?>(null) }
-    var showFilterSheet by remember { mutableStateOf(false) }
+    val tasks by viewModel.tasks.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Tasks") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
                 actions = {
-                    IconButton(onClick = { showFilterSheet = true }) {
-                        Icon(Icons.Default.FilterList, contentDescription = "Filter")
+                    IconButton(onClick = onNavigateToCreateTask) {
+                        Icon(Icons.Default.Add, contentDescription = "Create Task")
                     }
                 }
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = onCreateTask) {
-                Icon(Icons.Default.Add, contentDescription = "Create Task")
-            }
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Active Filters
-            if (selectedStatus != null || selectedPriority != null) {
-                ActiveFilters(
-                    status = selectedStatus,
-                    priority = selectedPriority,
-                    onClearStatus = { selectedStatus = null },
-                    onClearPriority = { selectedPriority = null }
-                )
-            }
-
-            // Task List
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(10) { index ->
-                    TaskItem(
-                        title = "Task ${index + 1}",
-                        project = "Project ${(index / 3) + 1}",
-                        assignee = "Team Member ${(index % 3) + 1}",
-                        dueDate = "Mar ${28 + index}, 2024",
-                        status = when (index % 3) {
-                            0 -> "TODO"
-                            1 -> "IN_PROGRESS"
-                            else -> "COMPLETED"
-                        },
-                        priority = when (index % 3) {
-                            0 -> "HIGH"
-                            1 -> "MEDIUM"
-                            else -> "LOW"
-                        },
-                        onClick = { onTaskClick("task_$index") }
+            when {
+                isLoading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
                     )
+                }
+                error != null -> {
+                    Text(
+                        text = error ?: "Unknown error occurred",
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(16.dp)
+                    )
+                }
+                tasks.isEmpty() -> {
+                    Text(
+                        text = "No tasks found",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(16.dp)
+                    )
+                }
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(tasks) { task ->
+                            TaskCard(
+                                task = task,
+                                onEdit = { onNavigateToEditTask(task.id) }
+                            )
+                        }
+                    }
                 }
             }
-        }
-
-        // Filter Sheet
-        if (showFilterSheet) {
-            FilterSheet(
-                selectedStatus = selectedStatus,
-                selectedPriority = selectedPriority,
-                onStatusSelected = { selectedStatus = it },
-                onPrioritySelected = { selectedPriority = it },
-                onDismiss = { showFilterSheet = false }
-            )
-        }
-    }
-}
-
-@Composable
-private fun ActiveFilters(
-    status: String?,
-    priority: String?,
-    onClearStatus: () -> Unit,
-    onClearPriority: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        status?.let {
-            FilterChip(
-                selected = true,
-                onClick = onClearStatus,
-                label = { Text("Status: $it") },
-                trailingIcon = {
-                    Icon(
-                        Icons.Default.Close,
-                        contentDescription = "Clear status filter",
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            )
-        }
-        priority?.let {
-            FilterChip(
-                selected = true,
-                onClick = onClearPriority,
-                label = { Text("Priority: $it") },
-                trailingIcon = {
-                    Icon(
-                        Icons.Default.Close,
-                        contentDescription = "Clear priority filter",
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            )
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FilterSheet(
-    selectedStatus: String?,
-    selectedPriority: String?,
-    onStatusSelected: (String?) -> Unit,
-    onPrioritySelected: (String?) -> Unit,
-    onDismiss: () -> Unit
+private fun TaskCard(
+    task: Task,
+    onEdit: () -> Unit
 ) {
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onEdit
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(16.dp)
         ) {
-            Text(
-                text = "Filter Tasks",
-                style = MaterialTheme.typography.titleLarge
-            )
-
-            // Status Filter
-            Text(
-                text = "Status",
-                style = MaterialTheme.typography.titleSmall
-            )
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                listOf("TODO", "IN_PROGRESS", "COMPLETED").forEach { status ->
-                    FilterChip(
-                        selected = selectedStatus == status,
-                        onClick = { onStatusSelected(if (selectedStatus == status) null else status) },
-                        label = { Text(status) }
-                    )
-                }
+                Text(
+                    text = task.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                StatusChip(status = task.status)
             }
 
-            // Priority Filter
+            Spacer(modifier = Modifier.height(8.dp))
+
             Text(
-                text = "Priority",
-                style = MaterialTheme.typography.titleSmall
+                text = task.description,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                listOf("LOW", "MEDIUM", "HIGH").forEach { priority ->
-                    FilterChip(
-                        selected = selectedPriority == priority,
-                        onClick = { onPrioritySelected(if (selectedPriority == priority) null else priority) },
-                        label = { Text(priority) }
-                    )
+                Text(
+                    text = "Due: ${task.dueDate?.toDate()?.toString() ?: "No due date"}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit Task")
                 }
             }
-
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TaskItem(
-    title: String,
-    project: String,
-    assignee: String,
-    dueDate: String,
-    status: String,
-    priority: String,
-    onClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = project,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    StatusChip(
-                        text = priority,
-                        color = when (priority) {
-                            "HIGH" -> Color(0xFFE53935)
-                            "MEDIUM" -> Color(0xFFFFA000)
-                            else -> Color(0xFF4CAF50)
-                        }
-                    )
-                    StatusChip(
-                        text = status,
-                        color = when (status) {
-                            "TODO" -> Color(0xFFFFA000)
-                            "IN_PROGRESS" -> Color(0xFF2196F3)
-                            else -> Color(0xFF4CAF50)
-                        }
-                    )
-                }
-            }
+private fun StatusChip(status: TaskStatus) {
+    val (color, text) = when (status) {
+        TaskStatus.TODO -> MaterialTheme.colorScheme.primary to "To Do"
+        TaskStatus.IN_PROGRESS -> MaterialTheme.colorScheme.secondary to "In Progress"
+        TaskStatus.IN_REVIEW -> MaterialTheme.colorScheme.tertiary to "In Review"
+        TaskStatus.COMPLETED -> MaterialTheme.colorScheme.primary to "Completed"
+    }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.Person,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = assignee,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.CalendarToday,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Due: $dueDate",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
+    Surface(
+        color = color.copy(alpha = 0.1f),
+        shape = MaterialTheme.shapes.small
+    ) {
+        Text(
+            text = text,
+            color = color,
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        )
     }
 } 

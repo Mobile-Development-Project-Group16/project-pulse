@@ -14,48 +14,83 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
+import com.bda.projectpulse.models.Project
+import com.bda.projectpulse.models.ProjectPriority
+import com.bda.projectpulse.models.ProjectStatus
+import com.google.firebase.Timestamp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateEditProjectScreen(
-    isEditing: Boolean = false,
-    onNavigateBack: () -> Unit,
-    onSave: () -> Unit
+    viewModel: ProjectViewModel,
+    projectId: String? = null,
+    onSave: () -> Unit,
+    onNavigateBack: () -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var selectedStatus by remember { mutableStateOf("IN_PROGRESS") }
-    var selectedPriority by remember { mutableStateOf("MEDIUM") }
-    var startDate by remember { mutableStateOf(LocalDate.now()) }
-    var dueDate by remember { mutableStateOf(LocalDate.now().plusDays(30)) }
+    var status by remember { mutableStateOf(ProjectStatus.PLANNING) }
+    var priority by remember { mutableStateOf(ProjectPriority.MEDIUM) }
+    var startDate by remember { mutableStateOf<LocalDate?>(null) }
+    var endDate by remember { mutableStateOf<LocalDate?>(null) }
     var showStartDatePicker by remember { mutableStateOf(false) }
-    var showDueDatePicker by remember { mutableStateOf(false) }
-    var selectedTags by remember { mutableStateOf(setOf<String>()) }
-    var showTagInput by remember { mutableStateOf(false) }
-    var newTag by remember { mutableStateOf("") }
+    var showEndDatePicker by remember { mutableStateOf(false) }
 
-    val dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy")
+    LaunchedEffect(projectId) {
+        projectId?.let { id ->
+            viewModel.loadProjectById(id)
+        }
+    }
+
+    val selectedProject by viewModel.selectedProject.collectAsState()
+
+    LaunchedEffect(selectedProject) {
+        selectedProject?.let { project ->
+            name = project.name
+            description = project.description
+            status = project.status
+            priority = project.priority
+            startDate = project.startDate?.toDate()?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDate()
+            endDate = project.endDate?.toDate()?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDate()
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isEditing) "Edit Project" else "Create Project") },
+                title = { Text(if (projectId == null) "Create Project" else "Edit Project") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
-                    TextButton(
-                        onClick = onSave,
-                        enabled = title.isNotBlank()
+                    IconButton(
+                        onClick = {
+                            val project = Project(
+                                id = projectId ?: "",
+                                name = name,
+                                description = description,
+                                status = status,
+                                priority = priority,
+                                startDate = startDate?.let { Timestamp(it.atStartOfDay(ZoneId.systemDefault()).toInstant().epochSecond, 0) },
+                                endDate = endDate?.let { Timestamp(it.atStartOfDay(ZoneId.systemDefault()).toInstant().epochSecond, 0) }
+                            )
+                            if (projectId == null) {
+                                viewModel.createProject(project)
+                            } else {
+                                viewModel.updateProject(projectId, project)
+                            }
+                            onSave()
+                        }
                     ) {
-                        Text("Save")
+                        Icon(Icons.Default.Save, contentDescription = "Save")
                     }
                 }
             )
@@ -65,190 +100,72 @@ fun CreateEditProjectScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Title
             OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("Title") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Name") },
+                modifier = Modifier.fillMaxWidth()
             )
 
-            // Description
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
                 label = { Text("Description") },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 3,
-                maxLines = 5
+                minLines = 3
             )
 
-            // Status Selection
-            Column {
-                Text(
-                    text = "Status",
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    listOf("TODO", "IN_PROGRESS", "COMPLETED").forEach { status ->
-                        FilterChip(
-                            selected = selectedStatus == status,
-                            onClick = { selectedStatus = status },
-                            label = { Text(status) }
-                        )
-                    }
+            Text("Status", style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ProjectStatus.values().forEach { projectStatus ->
+                    FilterChip(
+                        selected = status == projectStatus,
+                        onClick = { status = projectStatus },
+                        label = { Text(projectStatus.name) }
+                    )
                 }
             }
 
-            // Priority Selection
-            Column {
-                Text(
-                    text = "Priority",
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    listOf("LOW", "MEDIUM", "HIGH").forEach { priority ->
-                        FilterChip(
-                            selected = selectedPriority == priority,
-                            onClick = { selectedPriority = priority },
-                            label = { Text(priority) }
-                        )
-                    }
+            Text("Priority", style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ProjectPriority.values().forEach { projectPriority ->
+                    FilterChip(
+                        selected = priority == projectPriority,
+                        onClick = { priority = projectPriority },
+                        label = { Text(projectPriority.name) }
+                    )
                 }
             }
 
-            // Start Date Selection
-            OutlinedCard(
+            OutlinedButton(
                 onClick = { showStartDatePicker = true },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Start Date",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = startDate.format(dateFormatter),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                    Icon(
-                        Icons.Default.CalendarToday,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Text(startDate?.toString() ?: "Set Start Date")
             }
 
-            // Due Date Selection
-            OutlinedCard(
-                onClick = { showDueDatePicker = true },
+            OutlinedButton(
+                onClick = { showEndDatePicker = true },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Due Date",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = dueDate.format(dateFormatter),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                    Icon(
-                        Icons.Default.CalendarToday,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            // Tags Section
-            Column {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Tags",
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                    TextButton(onClick = { showTagInput = true }) {
-                        Text("Add Tag")
-                    }
-                }
-
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    selectedTags.forEach { tag ->
-                        FilterChip(
-                            selected = true,
-                            onClick = { selectedTags = selectedTags - tag },
-                            label = { Text(tag) },
-                            trailingIcon = {
-                                Icon(
-                                    Icons.Default.Close,
-                                    contentDescription = "Remove tag",
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        )
-                    }
-                }
+                Text(endDate?.toString() ?: "Set End Date")
             }
         }
 
-        // Start Date Picker Dialog
         if (showStartDatePicker) {
-            val startDatePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = startDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-            )
             DatePickerDialog(
                 onDismissRequest = { showStartDatePicker = false },
                 confirmButton = {
-                    TextButton(
-                        onClick = {
-                            startDatePickerState.selectedDateMillis?.let { millis ->
-                                startDate = Instant.ofEpochMilli(millis)
-                                    .atZone(ZoneId.systemDefault())
-                                    .toLocalDate()
-                            }
-                            showStartDatePicker = false
-                        }
-                    ) {
+                    TextButton(onClick = { showStartDatePicker = false }) {
                         Text("OK")
                     }
                 },
@@ -259,78 +176,35 @@ fun CreateEditProjectScreen(
                 }
             ) {
                 DatePicker(
-                    state = startDatePickerState,
-                    title = { Text("Select Start Date") }
+                    state = rememberDatePickerState(
+                        initialSelectedDateMillis = startDate?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.epochSecond?.times(1000)
+                    ),
+                    showModeToggle = false
                 )
             }
         }
 
-        // Due Date Picker Dialog
-        if (showDueDatePicker) {
-            val dueDatePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = dueDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-            )
+        if (showEndDatePicker) {
             DatePickerDialog(
-                onDismissRequest = { showDueDatePicker = false },
+                onDismissRequest = { showEndDatePicker = false },
                 confirmButton = {
-                    TextButton(
-                        onClick = {
-                            dueDatePickerState.selectedDateMillis?.let { millis ->
-                                dueDate = Instant.ofEpochMilli(millis)
-                                    .atZone(ZoneId.systemDefault())
-                                    .toLocalDate()
-                            }
-                            showDueDatePicker = false
-                        }
-                    ) {
+                    TextButton(onClick = { showEndDatePicker = false }) {
                         Text("OK")
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showDueDatePicker = false }) {
+                    TextButton(onClick = { showEndDatePicker = false }) {
                         Text("Cancel")
                     }
                 }
             ) {
                 DatePicker(
-                    state = dueDatePickerState,
-                    title = { Text("Select Due Date") }
+                    state = rememberDatePickerState(
+                        initialSelectedDateMillis = endDate?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.epochSecond?.times(1000)
+                    ),
+                    showModeToggle = false
                 )
             }
-        }
-
-        // Add Tag Dialog
-        if (showTagInput) {
-            AlertDialog(
-                onDismissRequest = { showTagInput = false },
-                title = { Text("Add Tag") },
-                text = {
-                    OutlinedTextField(
-                        value = newTag,
-                        onValueChange = { newTag = it },
-                        label = { Text("Tag Name") },
-                        singleLine = true
-                    )
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            if (newTag.isNotBlank()) {
-                                selectedTags = selectedTags + newTag
-                                newTag = ""
-                                showTagInput = false
-                            }
-                        }
-                    ) {
-                        Text("Add")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showTagInput = false }) {
-                        Text("Cancel")
-                    }
-                }
-            )
         }
     }
 }

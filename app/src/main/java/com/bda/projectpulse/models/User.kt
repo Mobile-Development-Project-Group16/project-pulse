@@ -1,11 +1,12 @@
 package com.bda.projectpulse.models
 
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.PropertyName
 
 enum class UserRole {
     ADMIN,
-    PROJECT_MANAGER,
-    TEAM_MEMBER
+    MANAGER,
+    USER
 }
 
 data class User(
@@ -23,17 +24,13 @@ data class User(
     
     @get:PropertyName("role")
     @set:PropertyName("role")
-    var role: UserRole = UserRole.TEAM_MEMBER,
+    var role: UserRole = UserRole.USER,
     
     @get:PropertyName("createdAt")
     @set:PropertyName("createdAt")
-    var createdAt: Long = System.currentTimeMillis(),
+    var createdAt: Timestamp = Timestamp.now(),
     
-    @get:PropertyName("lastLoginAt")
-    @set:PropertyName("lastLoginAt")
-    var lastLoginAt: Long = System.currentTimeMillis(),
-    
-    @get:PropertyName("isActive")
-    @set:PropertyName("isActive")
-    var isActive: Boolean = true
+    @get:PropertyName("updatedAt")
+    @set:PropertyName("updatedAt")
+    var updatedAt: Timestamp = Timestamp.now()
 ) 

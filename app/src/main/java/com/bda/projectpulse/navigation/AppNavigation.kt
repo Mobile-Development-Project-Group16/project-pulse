@@ -2,214 +2,139 @@ package com.bda.projectpulse.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.bda.projectpulse.ui.auth.AuthScreen
 import com.bda.projectpulse.ui.auth.AuthViewModel
-import com.bda.projectpulse.ui.dashboard.DashboardScreen
-import com.bda.projectpulse.ui.dashboard.RoleDashboardScreen
-import com.bda.projectpulse.ui.projects.ProjectListScreen
 import com.bda.projectpulse.ui.projects.CreateEditProjectScreen
-import com.bda.projectpulse.ui.projects.ProjectDetailsScreen
-import com.bda.projectpulse.ui.tasks.TaskListScreen
+import com.bda.projectpulse.ui.projects.ProjectListScreen
+import com.bda.projectpulse.ui.projects.ProjectViewModel
+import com.bda.projectpulse.ui.projects.TeamManagementScreen
 import com.bda.projectpulse.ui.tasks.CreateEditTaskScreen
+import com.bda.projectpulse.ui.tasks.TaskListScreen
+import com.bda.projectpulse.ui.tasks.TaskViewModel
 import com.bda.projectpulse.ui.profile.ProfileScreen
 
 @Composable
 fun AppNavigation(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController,
+    authViewModel: AuthViewModel,
+    projectViewModel: ProjectViewModel,
+    taskViewModel: TaskViewModel
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Login.route
+        startDestination = Screen.Auth.route
     ) {
-        composable(Screen.Login.route) {
+        composable(Screen.Auth.route) {
             AuthScreen(
-                viewModel = AuthViewModel(),
+                viewModel = authViewModel,
                 onAuthSuccess = {
-                    navController.navigate(Screen.Dashboard.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                    navController.navigate(Screen.Projects.route) {
+                        popUpTo(Screen.Auth.route) { inclusive = true }
                     }
                 }
             )
         }
 
-        composable(Screen.Dashboard.route) {
-            DashboardScreen(
-                onProjectClick = { projectId -> 
-                    navController.navigate(Screen.ProjectDetails.createRoute(projectId))
-                },
-                onTaskClick = { taskId ->
-                    navController.navigate(Screen.EditTask.createRoute(taskId))
-                },
-                onViewAllProjects = {
-                    navController.navigate(Screen.ProjectList.route)
-                },
-                onViewAllTasks = {
-                    navController.navigate(Screen.TaskList.route)
-                },
-                onCreateProject = {
-                    navController.navigate(Screen.CreateProject.route)
-                },
-                onCreateTask = {
-                    navController.navigate(Screen.CreateTask.route)
-                },
-                onProfileClick = {
-                    navController.navigate(Screen.Profile.route)
-                }
-            )
-        }
-
-        composable(Screen.RoleDashboard.route) {
-            RoleDashboardScreen(
-                userRole = "ADMIN",
-                userName = "John Doe",
-                onProjectClick = { projectId ->
-                    navController.navigate(Screen.ProjectDetails.createRoute(projectId))
-                },
-                onTaskClick = { taskId ->
-                    navController.navigate(Screen.EditTask.createRoute(taskId))
-                },
-                onTeamMemberClick = { memberId ->
-                    navController.navigate(Screen.TeamMember.createRoute(memberId))
-                },
-                onCreateProject = {
-                    navController.navigate(Screen.CreateProject.route)
-                },
-                onCreateTask = {
-                    navController.navigate(Screen.CreateTask.route)
-                },
-                onManageTeam = {
-                    navController.navigate(Screen.Team.route)
-                }
-            )
-        }
-
-        composable(Screen.ProjectList.route) {
+        composable(Screen.Projects.route) {
             ProjectListScreen(
-                onProjectClick = { projectId ->
-                    navController.navigate(Screen.ProjectDetails.createRoute(projectId))
+                onNavigateToCreateProject = {
+                    navController.navigate(Screen.CreateEditProject.route)
                 },
-                onCreateProject = {
-                    navController.navigate(Screen.CreateProject.route)
+                onNavigateToEditProject = { projectId ->
+                    navController.navigate("${Screen.CreateEditProject.route}/$projectId")
+                },
+                onNavigateToTeamManagement = { projectId ->
+                    navController.navigate("${Screen.TeamManagement.route}/$projectId")
                 }
             )
         }
 
-        composable(Screen.CreateProject.route) {
+        composable(Screen.CreateEditProject.route) {
             CreateEditProjectScreen(
-                isEditing = false,
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
+                viewModel = projectViewModel,
                 onSave = {
-                    // Will implement later
-                    navController.popBackStack()
+                    navController.navigateUp()
+                },
+                onNavigateBack = {
+                    navController.navigateUp()
                 }
             )
         }
 
-        composable(
-            route = Screen.EditProject.route,
-            arguments = listOf(
-                navArgument("projectId") { type = NavType.StringType }
-            )
-        ) {
-            CreateEditProjectScreen(
-                isEditing = true,
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onSave = {
-                    // Will implement later
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable(
-            route = Screen.ProjectDetails.route,
-            arguments = listOf(
-                navArgument("projectId") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
+        composable("${Screen.CreateEditProject.route}/{projectId}") { backStackEntry ->
             val projectId = backStackEntry.arguments?.getString("projectId")
-            ProjectDetailsScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onEditProject = {
-                    navController.navigate(Screen.EditProject.createRoute(projectId ?: ""))
-                },
-                onCreateTask = {
-                    navController.navigate(Screen.CreateTask.route)
-                },
-                onTaskClick = { taskId ->
-                    navController.navigate(Screen.EditTask.createRoute(taskId))
-                },
-                onTeamMemberClick = { memberId ->
-                    navController.navigate(Screen.TeamMember.createRoute(memberId))
-                }
-            )
+            if (projectId != null) {
+                CreateEditProjectScreen(
+                    viewModel = projectViewModel,
+                    projectId = projectId,
+                    onSave = {
+                        navController.navigateUp()
+                    },
+                    onNavigateBack = {
+                        navController.navigateUp()
+                    }
+                )
+            }
         }
 
-        composable(Screen.TaskList.route) {
+        composable("${Screen.TeamManagement.route}/{projectId}") { backStackEntry ->
+            val projectId = backStackEntry.arguments?.getString("projectId")
+            if (projectId != null) {
+                TeamManagementScreen(
+                    viewModel = projectViewModel,
+                    projectId = projectId,
+                    onNavigateBack = {
+                        navController.navigateUp()
+                    }
+                )
+            }
+        }
+
+        composable(Screen.Tasks.route) {
             TaskListScreen(
-                onTaskClick = { taskId ->
-                    navController.navigate(Screen.EditTask.createRoute(taskId))
+                onNavigateToCreateTask = {
+                    navController.navigate(Screen.CreateEditTask.route)
                 },
-                onCreateTask = {
-                    navController.navigate(Screen.CreateTask.route)
-                },
-                onNavigateBack = {
-                    navController.popBackStack()
+                onNavigateToEditTask = { taskId ->
+                    navController.navigate("${Screen.CreateEditTask.route}/$taskId")
                 }
             )
         }
 
-        composable(Screen.CreateTask.route) {
+        composable(Screen.CreateEditTask.route) {
             CreateEditTaskScreen(
-                isEditing = false,
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
+                viewModel = taskViewModel,
                 onSave = {
-                    // TODO: Implement task creation
-                    navController.popBackStack()
+                    navController.navigateUp()
+                },
+                onNavigateBack = {
+                    navController.navigateUp()
                 }
             )
         }
 
-        composable(
-            route = Screen.EditTask.route,
-            arguments = listOf(
-                navArgument("taskId") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
+        composable("${Screen.CreateEditTask.route}/{taskId}") { backStackEntry ->
             val taskId = backStackEntry.arguments?.getString("taskId")
-            CreateEditTaskScreen(
-                isEditing = true,
-                taskId = taskId,
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onSave = {
-                    // TODO: Implement task update
-                    navController.popBackStack()
-                }
-            )
+            if (taskId != null) {
+                CreateEditTaskScreen(
+                    viewModel = taskViewModel,
+                    taskId = taskId,
+                    onSave = {
+                        navController.navigateUp()
+                    },
+                    onNavigateBack = {
+                        navController.navigateUp()
+                    }
+                )
+            }
         }
 
         composable(Screen.Profile.route) {
             ProfileScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
                 onSignOut = {
-                    navController.navigate(Screen.Login.route) {
+                    navController.navigate(Screen.Auth.route) {
                         popUpTo(0) { inclusive = true }
                     }
                 }

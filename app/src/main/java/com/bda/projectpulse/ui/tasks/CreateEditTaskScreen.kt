@@ -1,225 +1,237 @@
 package com.bda.projectpulse.ui.tasks
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.CalendarToday
-import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.bda.projectpulse.models.Project
+import com.bda.projectpulse.models.Task
+import com.bda.projectpulse.models.TaskPriority
+import com.bda.projectpulse.models.TaskStatus
+import com.bda.projectpulse.models.User
+import com.google.firebase.Timestamp
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateEditTaskScreen(
-    isEditing: Boolean = false,
+    viewModel: TaskViewModel,
     taskId: String? = null,
-    onNavigateBack: () -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    onNavigateBack: () -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var selectedStatus by remember { mutableStateOf("TODO") }
-    var selectedPriority by remember { mutableStateOf("MEDIUM") }
-    var selectedProject by remember { mutableStateOf<String?>(null) }
-    var selectedAssignee by remember { mutableStateOf<String?>(null) }
-    var dueDate by remember { mutableStateOf(LocalDate.now()) }
-    var showDatePicker by remember { mutableStateOf(false) }
+    var status by remember { mutableStateOf(TaskStatus.TODO) }
+    var priority by remember { mutableStateOf(TaskPriority.MEDIUM) }
+    var selectedProjectId by remember { mutableStateOf<String?>(null) }
+    var selectedAssigneeId by remember { mutableStateOf<String?>(null) }
+    var dueDate by remember { mutableStateOf<LocalDate?>(null) }
     var showProjectPicker by remember { mutableStateOf(false) }
     var showAssigneePicker by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
-    val dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy")
+    LaunchedEffect(taskId) {
+        taskId?.let { id ->
+            viewModel.loadTask(id)
+        }
+    }
+
+    val task by viewModel.task.collectAsState()
+    val projects by viewModel.projects.collectAsState()
+    val users by viewModel.users.collectAsState()
+
+    LaunchedEffect(task) {
+        task?.let {
+            title = it.title
+            description = it.description
+            status = it.status
+            priority = it.priority
+            selectedProjectId = it.projectId
+            selectedAssigneeId = it.assignedTo
+            dueDate = it.dueDate?.toDate()?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDate()
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isEditing) "Edit Task" else "Create Task") },
+                title = { Text(if (taskId == null) "Create Task" else "Edit Task") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
-                    TextButton(
-                        onClick = onSave,
-                        enabled = title.isNotBlank() && selectedProject != null && selectedAssignee != null
+                    IconButton(
+                        onClick = {
+                            viewModel.saveTask(
+                                Task(
+                                    id = taskId ?: "",
+                                    title = title,
+                                    description = description,
+                                    status = status,
+                                    priority = priority,
+                                    projectId = selectedProjectId ?: "",
+                                    assignedTo = selectedAssigneeId,
+                                    dueDate = dueDate?.let { Timestamp(it.atStartOfDay(ZoneId.systemDefault()).toInstant().epochSecond, 0) }
+                                )
+                            )
+                            onSave()
+                        }
                     ) {
-                        Text("Save")
+                        Icon(Icons.Default.Save, contentDescription = "Save")
                     }
                 }
             )
         }
     ) { padding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Title
-            OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("Title") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            // Description
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text("Description") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3,
-                maxLines = 5
-            )
-
-            // Project Selection
-            OutlinedCard(
-                onClick = { showProjectPicker = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Project",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = selectedProject ?: "Select Project",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                    Icon(
-                        Icons.Default.ChevronRight,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            // Assignee Selection
-            OutlinedCard(
-                onClick = { showAssigneePicker = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Assignee",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = selectedAssignee ?: "Select Assignee",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                    Icon(
-                        Icons.Default.ChevronRight,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            // Status Selection
-            Column {
-                Text(
-                    text = "Status",
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(bottom = 8.dp)
+            item {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Title") },
+                    modifier = Modifier.fillMaxWidth()
                 )
+            }
+
+            item {
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
+                )
+            }
+
+            item {
+                Text("Status", style = MaterialTheme.typography.titleMedium)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    listOf("TODO", "IN_PROGRESS", "COMPLETED").forEach { status ->
+                    TaskStatus.values().forEach { taskStatus ->
                         FilterChip(
-                            selected = selectedStatus == status,
-                            onClick = { selectedStatus = status },
-                            label = { Text(status) }
+                            selected = status == taskStatus,
+                            onClick = { status = taskStatus },
+                            label = { Text(taskStatus.name) }
                         )
                     }
                 }
             }
 
-            // Priority Selection
-            Column {
-                Text(
-                    text = "Priority",
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
+            item {
+                Text("Priority", style = MaterialTheme.typography.titleMedium)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    listOf("LOW", "MEDIUM", "HIGH").forEach { priority ->
+                    TaskPriority.values().forEach { taskPriority ->
                         FilterChip(
-                            selected = selectedPriority == priority,
-                            onClick = { selectedPriority = priority },
-                            label = { Text(priority) }
+                            selected = priority == taskPriority,
+                            onClick = { priority = taskPriority },
+                            label = { Text(taskPriority.name) }
                         )
                     }
                 }
             }
 
-            // Due Date Selection
-            OutlinedCard(
-                onClick = { showDatePicker = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+            item {
+                OutlinedButton(
+                    onClick = { showProjectPicker = true },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column {
-                        Text(
-                            text = "Due Date",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = dueDate.format(dateFormatter),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                    Icon(
-                        Icons.Outlined.CalendarToday,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text(projects.find { it.id == selectedProjectId }?.name ?: "Select Project")
+                }
+            }
+
+            item {
+                OutlinedButton(
+                    onClick = { showAssigneePicker = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(users.find { it.id == selectedAssigneeId }?.displayName ?: "Select Assignee")
+                }
+            }
+
+            item {
+                OutlinedButton(
+                    onClick = { showDatePicker = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(dueDate?.toString() ?: "Set Due Date")
                 }
             }
         }
 
-        // Date Picker Dialog
+        if (showProjectPicker) {
+            AlertDialog(
+                onDismissRequest = { showProjectPicker = false },
+                title = { Text("Select Project") },
+                text = {
+                    LazyColumn {
+                        items(projects) { project ->
+                            ListItem(
+                                headlineContent = { Text(project.name) },
+                                supportingContent = { Text(project.description) },
+                                modifier = Modifier.clickable {
+                                    selectedProjectId = project.id
+                                    showProjectPicker = false
+                                }
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showProjectPicker = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
+        if (showAssigneePicker) {
+            AlertDialog(
+                onDismissRequest = { showAssigneePicker = false },
+                title = { Text("Select Assignee") },
+                text = {
+                    LazyColumn {
+                        items(users) { user ->
+                            ListItem(
+                                headlineContent = { Text(user.displayName) },
+                                supportingContent = { Text(user.email) },
+                                modifier = Modifier.clickable {
+                                    selectedAssigneeId = user.id
+                                    showAssigneePicker = false
+                                }
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showAssigneePicker = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
         if (showDatePicker) {
             DatePickerDialog(
                 onDismissRequest = { showDatePicker = false },
@@ -236,67 +248,11 @@ fun CreateEditTaskScreen(
             ) {
                 DatePicker(
                     state = rememberDatePickerState(
-                        initialSelectedDateMillis = dueDate.toEpochDay() * 24 * 60 * 60 * 1000
+                        initialSelectedDateMillis = dueDate?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.epochSecond?.times(1000)
                     ),
-                    title = { Text("Select Due Date") }
+                    showModeToggle = false
                 )
             }
-        }
-
-        // Project Picker Dialog
-        if (showProjectPicker) {
-            AlertDialog(
-                onDismissRequest = { showProjectPicker = false },
-                title = { Text("Select Project") },
-                text = {
-                    Column {
-                        listOf("Project 1", "Project 2", "Project 3").forEach { project ->
-                            TextButton(
-                                onClick = {
-                                    selectedProject = project
-                                    showProjectPicker = false
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(project)
-                            }
-                        }
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = { showProjectPicker = false }) {
-                        Text("Cancel")
-                    }
-                }
-            )
-        }
-
-        // Assignee Picker Dialog
-        if (showAssigneePicker) {
-            AlertDialog(
-                onDismissRequest = { showAssigneePicker = false },
-                title = { Text("Select Assignee") },
-                text = {
-                    Column {
-                        listOf("Team Member 1", "Team Member 2", "Team Member 3").forEach { member ->
-                            TextButton(
-                                onClick = {
-                                    selectedAssignee = member
-                                    showAssigneePicker = false
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(member)
-                            }
-                        }
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = { showAssigneePicker = false }) {
-                        Text("Cancel")
-                    }
-                }
-            )
         }
     }
 } 
