@@ -1,104 +1,155 @@
 package com.bda.projectpulse.ui.tasks
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bda.projectpulse.models.Project
 import com.bda.projectpulse.models.Task
 import com.bda.projectpulse.models.TaskStatus
+import com.bda.projectpulse.models.TaskPriority
 import com.bda.projectpulse.models.User
-import com.bda.projectpulse.repositories.ProjectRepository
+import com.bda.projectpulse.models.UserRole
 import com.bda.projectpulse.repositories.TaskRepository
 import com.bda.projectpulse.repositories.UserRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import com.bda.projectpulse.repositories.ProjectRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class TaskViewModel(
-    private val taskRepository: TaskRepository = TaskRepository(),
-    private val projectRepository: ProjectRepository = ProjectRepository(),
-    private val userRepository: UserRepository = UserRepository()
+data class TaskUiState(
+    val tasks: List<Task> = emptyList(),
+    val selectedTask: Task? = null,
+    val users: List<User> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null
+)
+
+@HiltViewModel
+class TaskViewModel @Inject constructor(
+    private val taskRepository: TaskRepository,
+    private val userRepository: UserRepository,
+    private val projectRepository: ProjectRepository
 ) : ViewModel() {
 
+    private val _selectedTask = MutableStateFlow<Task?>(null)
+    val selectedTask = _selectedTask.asStateFlow()
+
     private val _tasks = MutableStateFlow<List<Task>>(emptyList())
-    val tasks: StateFlow<List<Task>> = _tasks.asStateFlow()
-
-    private val _task = MutableStateFlow<Task?>(null)
-    val task: StateFlow<Task?> = _task.asStateFlow()
-
-    private val _projects = MutableStateFlow<List<Project>>(emptyList())
-    val projects: StateFlow<List<Project>> = _projects.asStateFlow()
+    val tasks = _tasks.asStateFlow()
 
     private val _users = MutableStateFlow<List<User>>(emptyList())
-    val users: StateFlow<List<User>> = _users.asStateFlow()
+    val users = _users.asStateFlow()
+
+    private val _projectTeamMembers = MutableStateFlow<List<User>>(emptyList())
+    val projectTeamMembers = _projectTeamMembers.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    val isLoading = _isLoading.asStateFlow()
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
+    val error = mutableStateOf<String?>(null)
+
+    private val _uiState = MutableStateFlow(TaskUiState())
+    val uiState: StateFlow<TaskUiState> = _uiState.asStateFlow()
 
     init {
-        loadTasks()
-        loadProjects()
         loadUsers()
     }
 
-    private fun loadTasks() {
+    fun loadTaskById(taskId: String) {
         viewModelScope.launch {
+            _isLoading.value = true
+            error.value = null
             try {
-                _isLoading.value = true
-                taskRepository.getTasks().collect { tasks ->
-                    _tasks.value = tasks
-                }
-            } catch (e: Exception) {
-                _error.value = e.message
+                taskRepository.getTaskById(taskId)
+                    .catch { e -> error.value = e.message }
+                    .collect { task ->
+                        _selectedTask.value = task
+                    }
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    private fun loadProjects() {
+    fun loadTasks() {
         viewModelScope.launch {
+            _isLoading.value = true
+            error.value = null
             try {
-                _isLoading.value = true
-                projectRepository.getProjects().collect { projects ->
-                    _projects.value = projects
-                }
-            } catch (e: Exception) {
-                _error.value = e.message
+                taskRepository.getTasks()
+                    .catch { e -> error.value = e.message }
+                    .collect { taskList ->
+                        _tasks.value = taskList
+                    }
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    private fun loadUsers() {
+    fun loadTasksByProjectId(projectId: String) {
         viewModelScope.launch {
+            _isLoading.value = true
+            error.value = null
             try {
-                _isLoading.value = true
-                userRepository.getUsers().collect { users ->
-                    _users.value = users
+                val currentUser = userRepository.getCurrentUser()
+                if (currentUser == null) {
+                    error.value = "User not authenticated"
+                    return@launch
                 }
-            } catch (e: Exception) {
-                _error.value = e.message
+                
+                taskRepository.getProjectTasks(projectId, currentUser.role, currentUser.uid)
+                    .catch { e -> error.value = e.message }
+                    .collect { tasks ->
+                        _tasks.value = tasks
+                    }
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    fun loadTask(taskId: String) {
+    fun loadUsers() {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
-                taskRepository.getTaskById(taskId).collect { task ->
-                    _task.value = task
-                }
+                userRepository.getUsers()
+                    .catch { e -> error.value = e.message }
+                    .collect { userList ->
+                        _users.value = userList
+                    }
             } catch (e: Exception) {
-                _error.value = e.message
-            } finally {
+                error.value = e.message
+            }
+        }
+    }
+
+    fun loadProjectTeamMembers(projectId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            error.value = null
+            try {
+                // First, get the project details to get team member IDs
+                val projectFlow = projectRepository.getProjectById(projectId)
+                val project = projectFlow.firstOrNull()
+                
+                if (project == null) {
+                    error.value = "Project not found"
+                    _isLoading.value = false
+                    return@launch
+                }
+                
+                // Get all users and filter to only include team members
+                userRepository.getUsers()
+                    .catch { e -> error.value = e.message }
+                    .collect { allUsers ->
+                        val teamMembers = allUsers.filter { user ->
+                            project.teamMembers.contains(user.uid) || project.ownerId == user.uid
+                        }
+                        _projectTeamMembers.value = teamMembers
+                        _isLoading.value = false
+                    }
+            } catch (e: Exception) {
+                error.value = e.message
                 _isLoading.value = false
             }
         }
@@ -106,28 +157,36 @@ class TaskViewModel(
 
     fun saveTask(task: Task) {
         viewModelScope.launch {
+            _isLoading.value = true
+            error.value = null
             try {
-                _isLoading.value = true
-                if (task.id.isEmpty()) {
-                    taskRepository.createTask(task)
-                } else {
-                    taskRepository.updateTask(task.id, task)
+                val currentUser = userRepository.getCurrentUser()
+                if (currentUser == null) {
+                    error.value = "User not authenticated"
+                    return@launch
                 }
+                
+                // Check if user has permission to manage tasks
+                if (currentUser.role != UserRole.ADMIN && currentUser.role != UserRole.MANAGER) {
+                    error.value = "Only administrators and managers can manage tasks"
+                    return@launch
+                }
+                
+                if (task.id.isEmpty()) {
+                    taskRepository.createTask(task, currentUser.uid)
+                } else {
+                    // For task updates, check if the user is the creator or an admin
+                    val existingTask = taskRepository.getTaskById(task.id).first()
+                    if (existingTask != null && existingTask.createdBy != currentUser.uid && currentUser.role != UserRole.ADMIN) {
+                        error.value = "You can only edit tasks you created"
+                        return@launch
+                    }
+                    
+                    taskRepository.updateTask(task)
+                }
+                loadTasksByProjectId(task.projectId)
             } catch (e: Exception) {
-                _error.value = e.message
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    fun deleteTask(taskId: String) {
-        viewModelScope.launch {
-            try {
-                _isLoading.value = true
-                taskRepository.deleteTask(taskId)
-            } catch (e: Exception) {
-                _error.value = e.message
+                error.value = e.message
             } finally {
                 _isLoading.value = false
             }
@@ -136,31 +195,160 @@ class TaskViewModel(
 
     fun updateTaskStatus(taskId: String, status: TaskStatus) {
         viewModelScope.launch {
+            _isLoading.value = true
+            error.value = null
             try {
-                _isLoading.value = true
                 taskRepository.updateTaskStatus(taskId, status)
-            } catch (e: Exception) {
-                _error.value = e.message
+                    .onSuccess {
+                        loadTaskById(taskId)
+                    }
+                    .onFailure { e ->
+                        error.value = e.message
+                    }
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    fun assignTask(taskId: String, userId: String) {
+    fun deleteTask(taskId: String, projectId: String) {
         viewModelScope.launch {
+            _isLoading.value = true
+            error.value = null
             try {
-                _isLoading.value = true
-                taskRepository.assignTask(taskId, userId)
-            } catch (e: Exception) {
-                _error.value = e.message
+                val currentUser = userRepository.getCurrentUser()
+                if (currentUser == null) {
+                    error.value = "User not authenticated"
+                    return@launch
+                }
+                
+                // Check if user has permission to delete tasks
+                if (currentUser.role != UserRole.ADMIN && currentUser.role != UserRole.MANAGER) {
+                    error.value = "Only administrators and managers can delete tasks"
+                    return@launch
+                }
+                
+                // For task deletion, check if the user is the creator or an admin
+                val existingTask = taskRepository.getTaskById(taskId).first()
+                if (existingTask != null && existingTask.createdBy != currentUser.uid && currentUser.role != UserRole.ADMIN) {
+                    error.value = "You can only delete tasks you created"
+                    return@launch
+                }
+                
+                taskRepository.deleteTask(taskId)
+                    .onSuccess {
+                        loadTasksByProjectId(projectId)
+                    }
+                    .onFailure { e ->
+                        error.value = e.message
+                    }
             } finally {
                 _isLoading.value = false
+            }
+        }
+    }
+
+    fun getTaskById(taskId: String): Flow<Task?> {
+        return taskRepository.getTaskById(taskId)
+    }
+
+    fun createTask(task: Task) {
+        viewModelScope.launch {
+            try {
+                val currentUser = userRepository.getCurrentUser()
+                if (currentUser == null) {
+                    error.value = "User not authenticated"
+                    return@launch
+                }
+                
+                taskRepository.createTask(task, currentUser.uid)
+                error.value = null
+            } catch (e: Exception) {
+                error.value = e.message
+            }
+        }
+    }
+
+    fun updateTask(task: Task) {
+        viewModelScope.launch {
+            try {
+                taskRepository.updateTask(task)
+                error.value = null
+            } catch (e: Exception) {
+                error.value = e.message
             }
         }
     }
 
     fun clearError() {
-        _error.value = null
+        error.value = null
+    }
+
+    fun getUserName(userId: String): String {
+        // First check in project team members
+        val teamMember = _projectTeamMembers.value.find { it.uid == userId }
+        if (teamMember != null) {
+            return teamMember.displayName
+        }
+        
+        // Then check in all users
+        val user = _users.value.find { it.uid == userId }
+        return user?.displayName ?: "Unknown User"
+    }
+    
+    fun getUserEmail(userId: String): String {
+        return _users.value.find { it.uid == userId }?.email ?: ""
+    }
+    
+    fun getAssigneeNames(assigneeIds: List<String>): String {
+        if (assigneeIds.isEmpty()) return "Unassigned"
+        
+        return assigneeIds.mapNotNull { userId ->
+            _users.value.find { it.uid == userId }?.displayName
+        }.joinToString(", ")
+    }
+    
+    fun addAssignee(userId: String) {
+        viewModelScope.launch {
+            val task = _selectedTask.value ?: return@launch
+            if (!task.assigneeIds.contains(userId)) {
+                val updatedTask = task.copy(
+                    assigneeIds = task.assigneeIds + userId
+                )
+                updateTask(updatedTask)
+                _selectedTask.value = updatedTask
+            }
+        }
+    }
+    
+    fun removeAssignee(userId: String) {
+        viewModelScope.launch {
+            val task = _selectedTask.value ?: return@launch
+            if (task.assigneeIds.contains(userId)) {
+                val updatedTask = task.copy(
+                    assigneeIds = task.assigneeIds - userId
+                )
+                updateTask(updatedTask)
+                _selectedTask.value = updatedTask
+            }
+        }
+    }
+
+    fun updateTaskPriority(taskId: String, priority: TaskPriority) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            error.value = null
+            try {
+                taskRepository.updateTaskPriority(taskId, priority)
+                    .onSuccess {
+                        loadTaskById(taskId)
+                    }
+                    .onFailure { e ->
+                        error.value = e.message
+                    }
+            } finally {
+                _isLoading.value = false
+            }
+        }
     }
 } 

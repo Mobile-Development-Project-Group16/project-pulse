@@ -1,19 +1,94 @@
 package com.bda.projectpulse.repositories
 
-import com.bda.projectpulse.models.Task
-import com.bda.projectpulse.models.TaskStatus
+import com.bda.projectpulse.models.*
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class TaskRepository(
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+@Singleton
+class TaskRepository @Inject constructor(
+    private val firestore: FirebaseFirestore
 ) {
     private val tasksCollection = firestore.collection("tasks")
+
+    suspend fun createTask(task: Task, createdBy: String): String {
+        return try {
+            val taskData = hashMapOf(
+                "title" to task.title,
+                "description" to task.description,
+                "projectId" to task.projectId,
+                "assigneeIds" to task.assigneeIds,
+                "status" to task.status.name,
+                "priority" to task.priority.name,
+                "dueDate" to task.dueDate,
+                "createdAt" to Timestamp.now(),
+                "updatedAt" to Timestamp.now(),
+                "comments" to task.comments,
+                "subTasks" to task.subTasks,
+                "attachments" to task.attachments,
+                "createdBy" to createdBy
+            )
+            val docRef = tasksCollection.add(taskData).await()
+            docRef.id
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+    suspend fun updateTask(task: Task) {
+        try {
+            val taskData = hashMapOf(
+                "title" to task.title,
+                "description" to task.description,
+                "projectId" to task.projectId,
+                "assigneeIds" to task.assigneeIds,
+                "status" to task.status.name,
+                "priority" to task.priority.name,
+                "dueDate" to task.dueDate,
+                "updatedAt" to Timestamp.now(),
+                "comments" to task.comments,
+                "subTasks" to task.subTasks,
+                "attachments" to task.attachments
+            )
+            tasksCollection.document(task.id).update(taskData as Map<String, Any>).await()
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+    suspend fun updateTaskStatus(taskId: String, status: TaskStatus): Result<Unit> = try {
+        tasksCollection.document(taskId)
+            .update("status", status.name, "updatedAt", Timestamp.now())
+            .await()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    suspend fun deleteTask(taskId: String): Result<Unit> = try {
+        tasksCollection.document(taskId)
+            .delete()
+            .await()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    fun getTaskById(taskId: String): Flow<Task?> = flow {
+        try {
+            val snapshot = tasksCollection.document(taskId).get().await()
+            emit(snapshot.toObject(Task::class.java))
+        } catch (e: Exception) {
+            throw e
+        }
+    }
 
     fun getTasks(): Flow<List<Task>> = callbackFlow {
         val subscription = tasksCollection
@@ -34,23 +109,7 @@ class TaskRepository(
         awaitClose { subscription.remove() }
     }
 
-    fun getTaskById(taskId: String): Flow<Task?> = callbackFlow {
-        val subscription = tasksCollection
-            .document(taskId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-
-                val task = snapshot?.toObject(Task::class.java)?.copy(id = snapshot.id)
-                trySend(task)
-            }
-
-        awaitClose { subscription.remove() }
-    }
-
-    fun getProjectTasks(projectId: String): Flow<List<Task>> = callbackFlow {
+    fun getProjectTasks(projectId: String, currentUserRole: UserRole, currentUserId: String): Flow<List<Task>> = callbackFlow {
         val subscription = tasksCollection
             .whereEqualTo("projectId", projectId)
             .orderBy("createdAt", Query.Direction.DESCENDING)
@@ -60,11 +119,24 @@ class TaskRepository(
                     return@addSnapshotListener
                 }
 
-                val tasks = snapshot?.documents?.mapNotNull { doc ->
+                val allTasks = snapshot?.documents?.mapNotNull { doc ->
                     doc.toObject(Task::class.java)?.copy(id = doc.id)
                 } ?: emptyList()
+                
+                // Filter tasks based on user role
+                val filteredTasks = when (currentUserRole) {
+                    UserRole.ADMIN -> allTasks // Admins can see all tasks
+                    UserRole.MANAGER -> allTasks.filter { task ->
+                        // Managers can see tasks they created or are assigned to
+                        task.createdBy == currentUserId || task.assigneeIds.contains(currentUserId)
+                    }
+                    else -> allTasks.filter { task ->
+                        // Regular users can only see tasks assigned to them
+                        task.assigneeIds.contains(currentUserId)
+                    }
+                }
 
-                trySend(tasks)
+                trySend(filteredTasks)
             }
 
         awaitClose { subscription.remove() }
@@ -90,53 +162,64 @@ class TaskRepository(
         awaitClose { subscription.remove() }
     }
 
-    suspend fun createTask(task: Task): Result<String> = try {
-        val taskWithTimestamp = task.copy(
-            createdAt = Timestamp.now(),
-            updatedAt = Timestamp.now()
-        )
-        val docRef = tasksCollection.add(taskWithTimestamp).await()
-        Result.success(docRef.id)
-    } catch (e: Exception) {
-        Result.failure(e)
-    }
-
-    suspend fun updateTask(taskId: String, task: Task): Result<Unit> = try {
-        val taskWithTimestamp = task.copy(
-            updatedAt = Timestamp.now()
-        )
-        tasksCollection.document(taskId).set(taskWithTimestamp).await()
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
-    }
-
-    suspend fun deleteTask(taskId: String): Result<Unit> = try {
-        tasksCollection.document(taskId).delete().await()
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
-    }
-
-    suspend fun updateTaskStatus(taskId: String, status: TaskStatus): Result<Unit> = try {
-        tasksCollection.document(taskId)
-            .update("status", status, "updatedAt", Timestamp.now())
-            .await()
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
+    fun getTasksByProject(projectId: String): Flow<List<Task>> = flow {
+        try {
+            val snapshot = tasksCollection.whereEqualTo("projectId", projectId).get().await()
+            val tasks = snapshot.documents.mapNotNull { doc ->
+                doc.data?.let { data ->
+                    Task(
+                        id = doc.id,
+                        title = data["title"] as? String ?: "",
+                        description = data["description"] as? String ?: "",
+                        projectId = data["projectId"] as? String ?: "",
+                        assigneeIds = (data["assigneeIds"] as? List<String>) ?: emptyList(),
+                        status = TaskStatus.valueOf(data["status"] as? String ?: TaskStatus.TODO.name),
+                        priority = TaskPriority.valueOf(data["priority"] as? String ?: TaskPriority.MEDIUM.name),
+                        dueDate = data["dueDate"] as? Timestamp,
+                        createdAt = (data["createdAt"] as? Timestamp) ?: Timestamp.now(),
+                        updatedAt = (data["updatedAt"] as? Timestamp) ?: Timestamp.now(),
+                        comments = (data["comments"] as? List<Map<String, Any>>)?.map { commentData ->
+                            Comment(
+                                id = commentData["id"] as? String ?: "",
+                                text = commentData["text"] as? String ?: "",
+                                authorId = commentData["authorId"] as? String ?: "",
+                                createdAt = (commentData["createdAt"] as? Timestamp) ?: Timestamp.now(),
+                                updatedAt = (commentData["updatedAt"] as? Timestamp) ?: Timestamp.now()
+                            )
+                        } ?: emptyList(),
+                        subTasks = (data["subTasks"] as? List<Map<String, Any>>)?.map { subTaskData ->
+                            SubTask(
+                                id = subTaskData["id"] as? String ?: "",
+                                title = subTaskData["title"] as? String ?: "",
+                                completed = subTaskData["completed"] as? Boolean ?: false,
+                                assigneeId = subTaskData["assigneeId"] as? String
+                            )
+                        } ?: emptyList(),
+                        attachments = (data["attachments"] as? List<String>) ?: emptyList(),
+                        createdBy = (data["createdBy"] as? String) ?: ""
+                    )
+                }
+            }
+            emit(tasks)
+        } catch (e: Exception) {
+            throw e
+        }
     }
 
     suspend fun assignTask(taskId: String, userId: String): Result<Unit> = try {
-        tasksCollection.document(taskId)
-            .update("assignedTo", userId, "updatedAt", Timestamp.now())
-            .await()
+        val task = tasksCollection.document(taskId).get().await().toObject(Task::class.java)
+        if (task != null) {
+            val updatedAssignees = task.assigneeIds + userId
+            tasksCollection.document(taskId)
+                .update("assigneeIds", updatedAssignees, "updatedAt", Timestamp.now())
+                .await()
+        }
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)
     }
 
-    suspend fun addComment(taskId: String, comment: Task.Comment): Result<Unit> = try {
+    suspend fun addComment(taskId: String, comment: Comment): Result<Unit> = try {
         tasksCollection.document(taskId)
             .update("comments", com.google.firebase.firestore.FieldValue.arrayUnion(comment))
             .await()
@@ -145,7 +228,7 @@ class TaskRepository(
         Result.failure(e)
     }
 
-    suspend fun updateSubTask(taskId: String, subTask: Task.SubTask): Result<Unit> {
+    suspend fun updateSubTask(taskId: String, subTask: SubTask): Result<Unit> {
         return try {
             val taskDoc = tasksCollection.document(taskId).get().await()
             val task = taskDoc.toObject(Task::class.java) ?: return Result.failure(Exception("Task not found"))
@@ -166,9 +249,18 @@ class TaskRepository(
         }
     }
 
-    suspend fun addAttachment(taskId: String, attachment: Task.Attachment): Result<Unit> = try {
+    suspend fun addAttachment(taskId: String, attachmentUrl: String): Result<Unit> = try {
         tasksCollection.document(taskId)
-            .update("attachments", com.google.firebase.firestore.FieldValue.arrayUnion(attachment))
+            .update("attachments", com.google.firebase.firestore.FieldValue.arrayUnion(attachmentUrl))
+            .await()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    suspend fun updateTaskPriority(taskId: String, priority: TaskPriority): Result<Unit> = try {
+        tasksCollection.document(taskId)
+            .update("priority", priority.name, "updatedAt", Timestamp.now())
             .await()
         Result.success(Unit)
     } catch (e: Exception) {

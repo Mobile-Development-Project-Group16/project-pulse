@@ -7,14 +7,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.bda.projectpulse.navigation.AppNavigation
-import com.bda.projectpulse.ui.auth.AuthViewModel
-import com.bda.projectpulse.ui.projects.ProjectViewModel
-import com.bda.projectpulse.ui.tasks.TaskViewModel
 import com.bda.projectpulse.ui.theme.ProjectPulseTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,15 +24,8 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
-                    val authViewModel: AuthViewModel = viewModel()
-                    val projectViewModel: ProjectViewModel = viewModel()
-                    val taskViewModel: TaskViewModel = viewModel()
-                    
                     AppNavigation(
-                        navController = navController,
-                        authViewModel = authViewModel,
-                        projectViewModel = projectViewModel,
-                        taskViewModel = taskViewModel
+                        navController = navController
                     )
                 }
             }

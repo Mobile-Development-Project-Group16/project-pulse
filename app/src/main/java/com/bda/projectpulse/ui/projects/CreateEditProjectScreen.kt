@@ -14,12 +14,14 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
+import java.util.*
 import com.bda.projectpulse.models.Project
 import com.bda.projectpulse.models.ProjectPriority
 import com.bda.projectpulse.models.ProjectStatus
@@ -28,43 +30,74 @@ import com.google.firebase.Timestamp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateEditProjectScreen(
-    viewModel: ProjectViewModel,
     projectId: String? = null,
-    onSave: () -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    viewModel: ProjectViewModel = hiltViewModel()
 ) {
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val error by viewModel.error.collectAsStateWithLifecycle()
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var status by remember { mutableStateOf(ProjectStatus.PLANNING) }
-    var priority by remember { mutableStateOf(ProjectPriority.MEDIUM) }
-    var startDate by remember { mutableStateOf<LocalDate?>(null) }
-    var endDate by remember { mutableStateOf<LocalDate?>(null) }
+    var startDate by remember { mutableStateOf(Date()) }
+    var endDate by remember { mutableStateOf<Date?>(null) }
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
+    var showError by remember { mutableStateOf(false) }
+    var isNewProject by remember { mutableStateOf(projectId == null || projectId == "{projectId}") }
+
+    val selectedProject by viewModel.selectedProject.collectAsStateWithLifecycle()
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
 
     LaunchedEffect(projectId) {
-        projectId?.let { id ->
-            viewModel.loadProjectById(id)
+        if (!isNewProject) {
+            viewModel.loadProjectById(projectId!!)
         }
     }
 
-    val selectedProject by viewModel.selectedProject.collectAsState()
+    LaunchedEffect(Unit) {
+        viewModel.loadCurrentUser()
+    }
 
     LaunchedEffect(selectedProject) {
         selectedProject?.let { project ->
             name = project.name
             description = project.description
             status = project.status
-            priority = project.priority
-            startDate = project.startDate?.toDate()?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDate()
-            endDate = project.endDate?.toDate()?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDate()
+            startDate = project.startDate.toDate()
+            endDate = project.endDate?.toDate()
         }
+    }
+
+    LaunchedEffect(error) {
+        if (error != null) {
+            showError = true
+        }
+    }
+
+    if (showError) {
+        AlertDialog(
+            onDismissRequest = { 
+                showError = false
+                viewModel.updateError(null)
+            },
+            title = { Text("Error") },
+            text = { Text(error ?: "An unknown error occurred") },
+            confirmButton = {
+                TextButton(onClick = { 
+                    showError = false
+                    viewModel.updateError(null)
+                }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (projectId == null) "Create Project" else "Edit Project") },
+                title = { Text(if (isNewProject) "Create Project" else "Edit Project") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -73,136 +106,194 @@ fun CreateEditProjectScreen(
                 actions = {
                     IconButton(
                         onClick = {
-                            val project = Project(
-                                id = projectId ?: "",
-                                name = name,
-                                description = description,
-                                status = status,
-                                priority = priority,
-                                startDate = startDate?.let { Timestamp(it.atStartOfDay(ZoneId.systemDefault()).toInstant().epochSecond, 0) },
-                                endDate = endDate?.let { Timestamp(it.atStartOfDay(ZoneId.systemDefault()).toInstant().epochSecond, 0) }
-                            )
-                            if (projectId == null) {
-                                viewModel.createProject(project)
-                            } else {
-                                viewModel.updateProject(projectId, project)
+                            if (name.isBlank()) {
+                                viewModel.updateError("Project name cannot be empty")
+                                return@IconButton
                             }
-                            onSave()
-                        }
+
+                            if (isNewProject) {
+                                viewModel.createProject(
+                                    Project(
+                                        id = "",
+                                        name = name,
+                                        description = description,
+                                        status = status,
+                                        startDate = Timestamp(startDate.time / 1000, 0),
+                                        endDate = endDate?.let { Timestamp(it.time / 1000, 0) },
+                                        ownerId = currentUser?.uid ?: "",
+                                        teamMembers = listOf(currentUser?.uid ?: "")
+                                    )
+                                )
+                            } else {
+                                projectId?.let { id ->
+                                    viewModel.updateProject(
+                                        Project(
+                                            id = id,
+                                            name = name,
+                                            description = description,
+                                            status = status,
+                                            startDate = Timestamp(startDate.time / 1000, 0),
+                                            endDate = endDate?.let { Timestamp(it.time / 1000, 0) },
+                                            ownerId = selectedProject?.ownerId ?: currentUser?.uid ?: "",
+                                            teamMembers = selectedProject?.teamMembers ?: listOf(currentUser?.uid ?: "")
+                                        )
+                                    )
+                                }
+                            }
+                            onNavigateBack()
+                        },
+                        enabled = !isLoading
                     ) {
-                        Icon(Icons.Default.Save, contentDescription = "Save")
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        } else {
+                            Icon(Icons.Default.Save, contentDescription = "Save")
+                        }
                     }
                 }
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Name") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text("Description") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3
-            )
-
-            Text("Status", style = MaterialTheme.typography.titleMedium)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                ProjectStatus.values().forEach { projectStatus ->
-                    FilterChip(
-                        selected = status == projectStatus,
-                        onClick = { status = projectStatus },
-                        label = { Text(projectStatus.name) }
-                    )
+                CircularProgressIndicator()
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
+                )
+
+                Text("Status", style = MaterialTheme.typography.titleMedium)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ProjectStatus.values().forEach { projectStatus ->
+                        FilterChip(
+                            selected = status == projectStatus,
+                            onClick = { status = projectStatus },
+                            label = { Text(projectStatus.name) }
+                        )
+                    }
                 }
-            }
 
-            Text("Priority", style = MaterialTheme.typography.titleMedium)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                ProjectPriority.values().forEach { projectPriority ->
-                    FilterChip(
-                        selected = priority == projectPriority,
-                        onClick = { priority = projectPriority },
-                        label = { Text(projectPriority.name) }
+                OutlinedButton(
+                    onClick = { showStartDatePicker = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        Icons.Outlined.CalendarToday,
+                        contentDescription = "Start Date",
+                        modifier = Modifier.padding(end = 8.dp)
                     )
+                    Text(startDate.toString())
                 }
-            }
 
-            OutlinedButton(
-                onClick = { showStartDatePicker = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(startDate?.toString() ?: "Set Start Date")
-            }
-
-            OutlinedButton(
-                onClick = { showEndDatePicker = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(endDate?.toString() ?: "Set End Date")
+                OutlinedButton(
+                    onClick = { showEndDatePicker = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        Icons.Outlined.CalendarToday,
+                        contentDescription = "End Date",
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(endDate?.toString() ?: "Set End Date")
+                }
             }
         }
 
         if (showStartDatePicker) {
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = startDate.time
+            )
+            
             DatePickerDialog(
                 onDismissRequest = { showStartDatePicker = false },
                 confirmButton = {
-                    TextButton(onClick = { showStartDatePicker = false }) {
+                    TextButton(
+                        onClick = {
+                            datePickerState.selectedDateMillis?.let {
+                                startDate = Date(it)
+                            }
+                            showStartDatePicker = false
+                        }
+                    ) {
                         Text("OK")
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showStartDatePicker = false }) {
+                    TextButton(
+                        onClick = { showStartDatePicker = false }
+                    ) {
                         Text("Cancel")
                     }
                 }
             ) {
                 DatePicker(
-                    state = rememberDatePickerState(
-                        initialSelectedDateMillis = startDate?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.epochSecond?.times(1000)
-                    ),
-                    showModeToggle = false
+                    state = datePickerState,
+                    showModeToggle = false,
+                    title = { Text("Select Start Date") }
                 )
             }
         }
 
         if (showEndDatePicker) {
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = endDate?.time
+            )
+            
             DatePickerDialog(
                 onDismissRequest = { showEndDatePicker = false },
                 confirmButton = {
-                    TextButton(onClick = { showEndDatePicker = false }) {
+                    TextButton(
+                        onClick = {
+                            datePickerState.selectedDateMillis?.let {
+                                endDate = Date(it)
+                            }
+                            showEndDatePicker = false
+                        }
+                    ) {
                         Text("OK")
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showEndDatePicker = false }) {
+                    TextButton(
+                        onClick = { showEndDatePicker = false }
+                    ) {
                         Text("Cancel")
                     }
                 }
             ) {
                 DatePicker(
-                    state = rememberDatePickerState(
-                        initialSelectedDateMillis = endDate?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.epochSecond?.times(1000)
-                    ),
-                    showModeToggle = false
+                    state = datePickerState,
+                    showModeToggle = false,
+                    title = { Text("Select End Date") }
                 )
             }
         }

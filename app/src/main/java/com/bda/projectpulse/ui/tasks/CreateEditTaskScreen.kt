@@ -1,6 +1,5 @@
 package com.bda.projectpulse.ui.tasks
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,54 +10,122 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.bda.projectpulse.models.Project
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bda.projectpulse.models.Task
 import com.bda.projectpulse.models.TaskPriority
 import com.bda.projectpulse.models.TaskStatus
 import com.bda.projectpulse.models.User
 import com.google.firebase.Timestamp
-import java.time.LocalDate
-import java.time.ZoneId
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateEditTaskScreen(
-    viewModel: TaskViewModel,
+    projectId: String,
     taskId: String? = null,
-    onSave: () -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    viewModel: TaskViewModel = hiltViewModel()
 ) {
+    val selectedTask by viewModel.selectedTask.collectAsStateWithLifecycle(initialValue = null)
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = false)
+    val teamMembers by viewModel.projectTeamMembers.collectAsStateWithLifecycle(initialValue = emptyList())
+    val error = viewModel.error.value
+    
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var status by remember { mutableStateOf(TaskStatus.TODO) }
     var priority by remember { mutableStateOf(TaskPriority.MEDIUM) }
-    var selectedProjectId by remember { mutableStateOf<String?>(null) }
-    var selectedAssigneeId by remember { mutableStateOf<String?>(null) }
-    var dueDate by remember { mutableStateOf<LocalDate?>(null) }
-    var showProjectPicker by remember { mutableStateOf(false) }
-    var showAssigneePicker by remember { mutableStateOf(false) }
+    var dueDate by remember { mutableStateOf<Date?>(null) }
+    var assigneeIds by remember { mutableStateOf<List<String>>(emptyList()) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showAssigneeSelector by remember { mutableStateOf(false) }
+    var showError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
 
-    LaunchedEffect(taskId) {
-        taskId?.let { id ->
-            viewModel.loadTask(id)
+    // Load task if editing and load project team members
+    LaunchedEffect(taskId, projectId) {
+        if (taskId != null) {
+            viewModel.loadTaskById(taskId)
+        }
+        viewModel.loadProjectTeamMembers(projectId)
+    }
+    
+    // Update UI when task is loaded
+    LaunchedEffect(selectedTask) {
+        selectedTask?.let { task ->
+            title = task.title
+            description = task.description
+            priority = task.priority
+            assigneeIds = task.assigneeIds
+            dueDate = task.dueDate?.toDate()
         }
     }
 
-    val task by viewModel.task.collectAsState()
-    val projects by viewModel.projects.collectAsState()
-    val users by viewModel.users.collectAsState()
-
-    LaunchedEffect(task) {
-        task?.let {
-            title = it.title
-            description = it.description
-            status = it.status
-            priority = it.priority
-            selectedProjectId = it.projectId
-            selectedAssigneeId = it.assignedTo
-            dueDate = it.dueDate?.toDate()?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDate()
+    // Handle errors
+    LaunchedEffect(error) {
+        error?.let {
+            errorMessage = it
+            showError = true
         }
+    }
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState()
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let {
+                        dueDate = Date(it)
+                    }
+                    showDatePicker = false
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    if (showAssigneeSelector) {
+        AssigneeSelectionDialog(
+            users = teamMembers,
+            selectedAssigneeIds = assigneeIds,
+            onAssigneeSelected = { userId, isSelected ->
+                assigneeIds = if (isSelected) {
+                    assigneeIds + userId
+                } else {
+                    assigneeIds - userId
+                }
+            },
+            onDismiss = { showAssigneeSelector = false }
+        )
+    }
+
+    if (showError) {
+        AlertDialog(
+            onDismissRequest = { 
+                showError = false
+                viewModel.clearError()
+            },
+            title = { Text("Error") },
+            text = { Text(errorMessage) },
+            confirmButton = {
+                TextButton(onClick = { 
+                    showError = false
+                    viewModel.clearError()
+                }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -73,20 +140,33 @@ fun CreateEditTaskScreen(
                 actions = {
                     IconButton(
                         onClick = {
-                            viewModel.saveTask(
-                                Task(
-                                    id = taskId ?: "",
-                                    title = title,
-                                    description = description,
-                                    status = status,
-                                    priority = priority,
-                                    projectId = selectedProjectId ?: "",
-                                    assignedTo = selectedAssigneeId,
-                                    dueDate = dueDate?.let { Timestamp(it.atStartOfDay(ZoneId.systemDefault()).toInstant().epochSecond, 0) }
-                                )
+                            if (title.isBlank()) {
+                                errorMessage = "Title cannot be empty"
+                                showError = true
+                                return@IconButton
+                            }
+
+                            val task = Task(
+                                id = taskId ?: "",
+                                title = title,
+                                description = description,
+                                projectId = projectId,
+                                status = selectedTask?.status ?: TaskStatus.TODO,
+                                priority = priority,
+                                assigneeIds = assigneeIds,
+                                dueDate = dueDate?.let { Timestamp(it.time / 1000, 0) },
+                                createdAt = selectedTask?.createdAt ?: Timestamp.now(),
+                                updatedAt = Timestamp.now(),
+                                subTasks = selectedTask?.subTasks ?: emptyList(),
+                                comments = selectedTask?.comments ?: emptyList()
                             )
-                            onSave()
-                        }
+
+                            viewModel.saveTask(task)
+                            if (error == null) {
+                                onNavigateBack()
+                            }
+                        },
+                        enabled = !isLoading
                     ) {
                         Icon(Icons.Default.Save, contentDescription = "Save")
                     }
@@ -94,165 +174,145 @@ fun CreateEditTaskScreen(
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("Title") },
-                    modifier = Modifier.fillMaxWidth()
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
                 )
-            }
-
-            item {
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Description") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 3
-                )
-            }
-
-            item {
-                Text("Status", style = MaterialTheme.typography.titleMedium)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+            } else {
+                Column(
+                    modifier = Modifier
+                        .padding(padding)
+                        .padding(16.dp)
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    TaskStatus.values().forEach { taskStatus ->
-                        FilterChip(
-                            selected = status == taskStatus,
-                            onClick = { status = taskStatus },
-                            label = { Text(taskStatus.name) }
-                        )
-                    }
-                }
-            }
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        label = { Text("Title") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-            item {
-                Text("Priority", style = MaterialTheme.typography.titleMedium)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    TaskPriority.values().forEach { taskPriority ->
-                        FilterChip(
-                            selected = priority == taskPriority,
-                            onClick = { priority = taskPriority },
-                            label = { Text(taskPriority.name) }
-                        )
-                    }
-                }
-            }
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        label = { Text("Description") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3
+                    )
 
-            item {
-                OutlinedButton(
-                    onClick = { showProjectPicker = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(projects.find { it.id == selectedProjectId }?.name ?: "Select Project")
-                }
-            }
-
-            item {
-                OutlinedButton(
-                    onClick = { showAssigneePicker = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(users.find { it.uid == selectedAssigneeId }?.displayName ?: "Select Assignee")
-                }
-            }
-
-            item {
-                OutlinedButton(
-                    onClick = { showDatePicker = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(dueDate?.toString() ?: "Set Due Date")
-                }
-            }
-        }
-
-        if (showProjectPicker) {
-            AlertDialog(
-                onDismissRequest = { showProjectPicker = false },
-                title = { Text("Select Project") },
-                text = {
-                    LazyColumn {
-                        items(projects) { project ->
-                            ListItem(
-                                headlineContent = { Text(project.name) },
-                                supportingContent = { Text(project.description) },
-                                modifier = Modifier.clickable {
-                                    selectedProjectId = project.id
-                                    showProjectPicker = false
-                                }
+                    Text("Priority", style = MaterialTheme.typography.labelLarge)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        TaskPriority.values().forEach { priorityOption ->
+                            FilterChip(
+                                selected = priority == priorityOption,
+                                onClick = { priority = priorityOption },
+                                label = { Text(priorityOption.name) }
                             )
                         }
                     }
-                },
-                confirmButton = {
-                    TextButton(onClick = { showProjectPicker = false }) {
-                        Text("Cancel")
-                    }
-                }
-            )
-        }
 
-        if (showAssigneePicker) {
-            AlertDialog(
-                onDismissRequest = { showAssigneePicker = false },
-                title = { Text("Select Assignee") },
-                text = {
-                    LazyColumn {
-                        items(users) { user ->
-                            ListItem(
-                                headlineContent = { Text(user.displayName) },
-                                supportingContent = { Text(user.email) },
-                                modifier = Modifier.clickable {
-                                    selectedAssigneeId = user.uid
-                                    showAssigneePicker = false
+                    OutlinedButton(
+                        onClick = { showDatePicker = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(dueDate?.let { "Due: ${SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(it)}" } ?: "Set Due Date")
+                    }
+                    
+                    OutlinedButton(
+                        onClick = { showAssigneeSelector = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        val assigneeText = when {
+                            assigneeIds.isEmpty() -> "Assign Task"
+                            assigneeIds.size == 1 -> "Assigned to: ${viewModel.getUserName(assigneeIds.first())}"
+                            else -> "Assigned to ${assigneeIds.size} team members"
+                        }
+                        Text(assigneeText)
+                    }
+                    
+                    if (assigneeIds.isNotEmpty()) {
+                        Text("Assignees:", style = MaterialTheme.typography.labelLarge)
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 100.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            items(assigneeIds) { userId ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(viewModel.getUserName(userId))
+                                    IconButton(onClick = { assigneeIds = assigneeIds - userId }) {
+                                        Icon(
+                                            Icons.Default.Close, 
+                                            contentDescription = "Remove",
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
                                 }
-                            )
+                                Divider()
+                            }
                         }
                     }
-                },
-                confirmButton = {
-                    TextButton(onClick = { showAssigneePicker = false }) {
-                        Text("Cancel")
-                    }
                 }
-            )
-        }
-
-        if (showDatePicker) {
-            DatePickerDialog(
-                onDismissRequest = { showDatePicker = false },
-                confirmButton = {
-                    TextButton(onClick = { showDatePicker = false }) {
-                        Text("OK")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDatePicker = false }) {
-                        Text("Cancel")
-                    }
-                }
-            ) {
-                DatePicker(
-                    state = rememberDatePickerState(
-                        initialSelectedDateMillis = dueDate?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.epochSecond?.times(1000)
-                    ),
-                    showModeToggle = false
-                )
             }
         }
     }
+}
+
+@Composable
+fun AssigneeSelectionDialog(
+    users: List<User>,
+    selectedAssigneeIds: List<String>,
+    onAssigneeSelected: (String, Boolean) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Select Assignees") },
+        text = {
+            if (users.isEmpty()) {
+                Text("No team members available for this project. Add team members to the project before assigning tasks.")
+            } else {
+                LazyColumn(
+                    modifier = Modifier.heightIn(max = 300.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(users) { user ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Checkbox(
+                                checked = selectedAssigneeIds.contains(user.uid),
+                                onCheckedChange = { isChecked ->
+                                    onAssigneeSelected(user.uid, isChecked)
+                                }
+                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(user.displayName)
+                                Text(
+                                    user.email,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Done")
+            }
+        }
+    )
 } 
