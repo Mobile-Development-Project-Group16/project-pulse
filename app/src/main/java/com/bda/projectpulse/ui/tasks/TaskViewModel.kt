@@ -184,7 +184,12 @@ class TaskViewModel @Inject constructor(
                     
                     taskRepository.updateTask(task)
                 }
+                
+                // Refresh the task list and selected task
                 loadTasksByProjectId(task.projectId)
+                if (task.id.isNotEmpty()) {
+                    loadTaskById(task.id)
+                }
             } catch (e: Exception) {
                 error.value = e.message
             } finally {
@@ -198,13 +203,30 @@ class TaskViewModel @Inject constructor(
             _isLoading.value = true
             error.value = null
             try {
+                if (taskId.isBlank()) {
+                    error.value = "Invalid task ID"
+                    return@launch
+                }
+
+                val task = taskRepository.getTaskById(taskId).first()
+                if (task == null) {
+                    error.value = "Task not found"
+                    return@launch
+                }
+
                 taskRepository.updateTaskStatus(taskId, status)
                     .onSuccess {
+                        // Refresh both the selected task and the task list
                         loadTaskById(taskId)
+                        task.projectId.let { projectId ->
+                            loadTasksByProjectId(projectId)
+                        }
                     }
                     .onFailure { e ->
-                        error.value = e.message
+                        error.value = e.message ?: "Failed to update task status"
                     }
+            } catch (e: Exception) {
+                error.value = e.message ?: "An unexpected error occurred"
             } finally {
                 _isLoading.value = false
             }
@@ -339,13 +361,30 @@ class TaskViewModel @Inject constructor(
             _isLoading.value = true
             error.value = null
             try {
+                if (taskId.isBlank()) {
+                    error.value = "Invalid task ID"
+                    return@launch
+                }
+
+                val task = taskRepository.getTaskById(taskId).first()
+                if (task == null) {
+                    error.value = "Task not found"
+                    return@launch
+                }
+
                 taskRepository.updateTaskPriority(taskId, priority)
                     .onSuccess {
+                        // Refresh both the selected task and the task list
                         loadTaskById(taskId)
+                        task.projectId.let { projectId ->
+                            loadTasksByProjectId(projectId)
+                        }
                     }
                     .onFailure { e ->
-                        error.value = e.message
+                        error.value = e.message ?: "Failed to update task priority"
                     }
+            } catch (e: Exception) {
+                error.value = e.message ?: "An unexpected error occurred"
             } finally {
                 _isLoading.value = false
             }

@@ -37,7 +37,7 @@ fun StatusChip(status: ProjectStatus) {
 }
 
 @Composable
-fun TaskStatusChip(status: TaskStatus) {
+fun TaskStatusChip(status: TaskStatus, modifier: Modifier = Modifier) {
     val (color, text) = when (status) {
         TaskStatus.TODO -> MaterialTheme.colorScheme.primary to "To Do"
         TaskStatus.IN_PROGRESS -> MaterialTheme.colorScheme.secondary to "In Progress"
@@ -47,7 +47,8 @@ fun TaskStatusChip(status: TaskStatus) {
 
     Surface(
         color = color.copy(alpha = 0.1f),
-        shape = MaterialTheme.shapes.small
+        shape = MaterialTheme.shapes.small,
+        modifier = modifier
     ) {
         Text(
             text = text,

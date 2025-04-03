@@ -20,6 +20,8 @@ import com.bda.projectpulse.ui.common.StatusChip
 import com.bda.projectpulse.ui.common.TaskStatusChip
 import java.text.SimpleDateFormat
 import java.util.*
+import com.bda.projectpulse.navigation.Screen
+import androidx.navigation.NavHostController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +31,8 @@ fun ProjectDetailsScreen(
     onNavigateToTaskDetails: (String, String) -> Unit,
     onNavigateToTeamManagement: (String) -> Unit,
     onNavigateBack: () -> Unit,
+    onNavigateToEditProject: (String) -> Unit,
+    navController: NavHostController,
     viewModel: ProjectViewModel = hiltViewModel()
 ) {
     val project by viewModel.selectedProject.collectAsStateWithLifecycle()
@@ -36,11 +40,46 @@ fun ProjectDetailsScreen(
     val users by viewModel.users.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
 
     LaunchedEffect(projectId) {
         viewModel.loadProjectById(projectId)
         viewModel.loadProjectTasks(projectId)
         viewModel.loadUsers()
+    }
+
+    // Check if user can manage this project
+    val canManageProject = currentUser != null && (
+        currentUser?.role == UserRole.ADMIN || 
+        project?.ownerId == currentUser?.uid
+    )
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text("Delete Project") },
+            text = { Text("Are you sure you want to delete this project? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteProject(projectId)
+                        showDeleteConfirmation = false
+                        onNavigateBack()
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -51,14 +90,39 @@ fun ProjectDetailsScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            navController.navigate(
+                                Screen.AIChat.createRoute(
+                                    projectId = projectId,
+                                    projectName = project?.name ?: "",
+                                    apiKey = "YOUR_OPENROUTER_API_KEY" // TODO: Get from secure storage
+                                )
+                            )
+                        }
+                    ) {
+                        Icon(Icons.Default.Chat, contentDescription = "AI Chat")
+                    }
+                    
+                    if (canManageProject) {
+                        IconButton(onClick = { onNavigateToEditProject(projectId) }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit Project")
+                        }
+                        IconButton(onClick = { showDeleteConfirmation = true }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete Project")
+                        }
+                    }
                 }
             )
         },
         floatingActionButton = {
-            val currentUser = viewModel.currentUser.value
             val canCreateTask = currentUser != null && (
-                currentUser.role == UserRole.ADMIN || 
-                currentUser.role == UserRole.MANAGER
+                currentUser?.role == UserRole.ADMIN || 
+                currentUser?.role == UserRole.MANAGER ||
+                project?.teamMembers?.contains(currentUser?.uid) == true ||
+                project?.ownerId == currentUser?.uid
             )
             
             if (canCreateTask) {
@@ -175,12 +239,11 @@ fun ProjectDetailsScreen(
                             )
                             
                             // Only show "Manage Team" button for admins, managers, or the project owner
-                            val currentUser = viewModel.currentUser.value
-                            val canManageTeam = currentUser != null && (
-                                currentProject.ownerId == currentUser.uid ||
-                                currentUser.role == UserRole.ADMIN ||
-                                currentUser.role == UserRole.MANAGER
-                            )
+                            val canManageTeam = currentUser?.let { user ->
+                                currentProject.ownerId == user.uid ||
+                                user.role == UserRole.ADMIN ||
+                                user.role == UserRole.MANAGER
+                            } ?: false
                             
                             if (canManageTeam) {
                                 Button(

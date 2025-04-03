@@ -13,6 +13,7 @@ import com.bda.projectpulse.ui.profile.ProfileScreen
 import com.bda.projectpulse.ui.projects.*
 import com.bda.projectpulse.ui.tasks.*
 import com.bda.projectpulse.ui.team.TeamMemberScreen
+import com.bda.projectpulse.ui.ai.AIChatScreen
 
 @Composable
 fun AppNavigation(
@@ -59,16 +60,20 @@ fun AppNavigation(
             val projectId = backStackEntry.arguments?.getString("projectId") ?: return@composable
             ProjectDetailsScreen(
                 projectId = projectId,
-                onNavigateToCreateTask = { projectId ->
-                    navController.navigate(Screen.CreateEditTask.createRoute(projectId))
+                onNavigateToCreateTask = { taskProjectId ->
+                    navController.navigate(Screen.CreateEditTask.createRoute(taskProjectId))
                 },
-                onNavigateToTaskDetails = { projectId, taskId ->
+                onNavigateToTaskDetails = { _, taskId ->
                     navController.navigate(Screen.TaskDetails.createRoute(taskId))
                 },
-                onNavigateToTeamManagement = { projectId ->
-                    navController.navigate(Screen.TeamManagement.createRoute(projectId))
+                onNavigateToTeamManagement = { teamProjectId ->
+                    navController.navigate(Screen.TeamManagement.createRoute(teamProjectId))
                 },
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToEditProject = { editProjectId ->
+                    navController.navigate(Screen.CreateEditProject.createRoute(editProjectId))
+                },
+                navController = navController
             )
         }
 
@@ -83,10 +88,17 @@ fun AppNavigation(
             )
         ) { backStackEntry ->
             val projectId = backStackEntry.arguments?.getString("projectId")
-            CreateEditProjectScreen(
-                projectId = projectId,
-                onNavigateBack = { navController.popBackStack() }
-            )
+            if (projectId != null) {
+                EditProjectScreen(
+                    projectId = projectId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            } else {
+                CreateEditProjectScreen(
+                    projectId = null,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
         }
 
         composable(
@@ -185,6 +197,26 @@ fun AppNavigation(
                 }
             )
         }
+
+        composable(
+            route = Screen.AIChat.route,
+            arguments = listOf(
+                navArgument("projectId") { type = NavType.StringType },
+                navArgument("projectName") { type = NavType.StringType },
+                navArgument("apiKey") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val projectId = backStackEntry.arguments?.getString("projectId") ?: return@composable
+            val projectName = backStackEntry.arguments?.getString("projectName") ?: return@composable
+            val apiKey = backStackEntry.arguments?.getString("apiKey") ?: return@composable
+
+            AIChatScreen(
+                projectId = projectId,
+                projectName = projectName,
+                apiKey = apiKey,
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
     }
 }
 
@@ -214,4 +246,8 @@ sealed class Screen(val route: String) {
         fun createRoute(projectId: String) = "projects/$projectId/team"
     }
     object Profile : Screen("profile")
+    object AIChat : Screen("ai_chat/{projectId}/{projectName}/{apiKey}") {
+        fun createRoute(projectId: String, projectName: String, apiKey: String) =
+            "ai_chat/$projectId/$projectName/$apiKey"
+    }
 }

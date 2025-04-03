@@ -17,6 +17,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bda.projectpulse.models.*
 import com.bda.projectpulse.ui.components.TaskPriorityBadge
 import com.bda.projectpulse.ui.components.TaskStatusBadge
+import com.bda.projectpulse.ui.components.TaskStatusChip
+import com.bda.projectpulse.ui.components.SwipeRefresh
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -46,11 +48,6 @@ fun TaskListScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                },
-                actions = {
-                    IconButton(onClick = { viewModel.loadTasksByProjectId(projectId) }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh")
-                    }
                 }
             )
         },
@@ -60,77 +57,80 @@ fun TaskListScreen(
             }
         }
     ) { padding ->
-        Box(
+        SwipeRefresh(
+            onRefresh = { viewModel.loadTasksByProjectId(projectId) },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            if (isLoading && tasks.isEmpty()) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            } else if (error != null) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "Error: $error",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.error
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (isLoading && tasks.isEmpty()) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = { viewModel.loadTasksByProjectId(projectId) }) {
-                        Text("Retry")
-                    }
-                }
-            } else if (tasks.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Assignment,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "No tasks found",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Create a new task by tapping the + button",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(tasks) { task ->
-                        TaskCard(
-                            task = task,
-                            onClick = { onTaskClick(task.id) },
-                            onStatusChange = { newStatus ->
-                                viewModel.updateTaskStatus(task.id, newStatus)
-                            },
-                            getUserName = { userId ->
-                                viewModel.getUserName(userId)
-                            }
+                } else if (error != null) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Error: $error",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.error
                         )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = { viewModel.loadTasksByProjectId(projectId) }) {
+                            Text("Retry")
+                        }
+                    }
+                } else if (tasks.isEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Assignment,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "No tasks found",
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Create a new task by tapping the + button",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(tasks) { task ->
+                            TaskCard(
+                                task = task,
+                                onClick = { onTaskClick(task.id) },
+                                onStatusChange = { newStatus ->
+                                    viewModel.updateTaskStatus(task.id, newStatus)
+                                },
+                                getUserName = { userId ->
+                                    viewModel.getUserName(userId)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -203,8 +203,8 @@ private fun TaskCard(
                                         imageVector = when (status) {
                                             TaskStatus.TODO -> Icons.Default.Assignment
                                             TaskStatus.IN_PROGRESS -> Icons.Default.DirectionsRun
+                                            TaskStatus.IN_REVIEW -> Icons.Default.RateReview
                                             TaskStatus.COMPLETED -> Icons.Default.Done
-                                            else -> Icons.Default.Info // Default icon for any future statuses
                                         },
                                         contentDescription = null
                                     )
@@ -231,18 +231,7 @@ private fun TaskCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                    ),
-                    modifier = Modifier.padding(end = 8.dp)
-                ) {
-                    Text(
-                        text = task.status.name.replace("_", " "),
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
-                }
+                TaskStatusChip(status = task.status)
                 
                 Text(
                     text = assigneeText,

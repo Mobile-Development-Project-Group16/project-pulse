@@ -158,7 +158,9 @@ fun CreateEditTaskScreen(
                                 createdAt = selectedTask?.createdAt ?: Timestamp.now(),
                                 updatedAt = Timestamp.now(),
                                 subTasks = selectedTask?.subTasks ?: emptyList(),
-                                comments = selectedTask?.comments ?: emptyList()
+                                comments = selectedTask?.comments ?: emptyList(),
+                                attachments = selectedTask?.attachments ?: emptyList(),
+                                createdBy = selectedTask?.createdBy ?: ""
                             )
 
                             viewModel.saveTask(task)

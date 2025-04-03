@@ -63,28 +63,42 @@ class TaskRepository @Inject constructor(
         }
     }
 
-    suspend fun updateTaskStatus(taskId: String, status: TaskStatus): Result<Unit> = try {
-        tasksCollection.document(taskId)
-            .update("status", status.name, "updatedAt", Timestamp.now())
-            .await()
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
+    suspend fun updateTaskStatus(taskId: String, status: TaskStatus): Result<Unit> {
+        return try {
+            if (taskId.isBlank()) {
+                return Result.failure(IllegalArgumentException("Task ID cannot be empty"))
+            }
+            
+            tasksCollection.document(taskId)
+                .update(
+                    mapOf(
+                        "status" to status.name,
+                        "updatedAt" to Timestamp.now()
+                    )
+                )
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
-    suspend fun deleteTask(taskId: String): Result<Unit> = try {
-        tasksCollection.document(taskId)
-            .delete()
-            .await()
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
+    suspend fun deleteTask(taskId: String): Result<Unit> {
+        return try {
+            tasksCollection.document(taskId)
+                .delete()
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     fun getTaskById(taskId: String): Flow<Task?> = flow {
         try {
             val snapshot = tasksCollection.document(taskId).get().await()
-            emit(snapshot.toObject(Task::class.java))
+            val task = snapshot.toObject(Task::class.java)
+            emit(task?.copy(id = snapshot.id))
         } catch (e: Exception) {
             throw e
         }
@@ -206,26 +220,30 @@ class TaskRepository @Inject constructor(
         }
     }
 
-    suspend fun assignTask(taskId: String, userId: String): Result<Unit> = try {
-        val task = tasksCollection.document(taskId).get().await().toObject(Task::class.java)
-        if (task != null) {
-            val updatedAssignees = task.assigneeIds + userId
-            tasksCollection.document(taskId)
-                .update("assigneeIds", updatedAssignees, "updatedAt", Timestamp.now())
-                .await()
+    suspend fun assignTask(taskId: String, userId: String): Result<Unit> {
+        return try {
+            val task = tasksCollection.document(taskId).get().await().toObject(Task::class.java)
+            if (task != null) {
+                val updatedAssignees = task.assigneeIds + userId
+                tasksCollection.document(taskId)
+                    .update("assigneeIds", updatedAssignees, "updatedAt", Timestamp.now())
+                    .await()
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
     }
 
-    suspend fun addComment(taskId: String, comment: Comment): Result<Unit> = try {
-        tasksCollection.document(taskId)
-            .update("comments", com.google.firebase.firestore.FieldValue.arrayUnion(comment))
-            .await()
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
+    suspend fun addComment(taskId: String, comment: Comment): Result<Unit> {
+        return try {
+            tasksCollection.document(taskId)
+                .update("comments", com.google.firebase.firestore.FieldValue.arrayUnion(comment))
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     suspend fun updateSubTask(taskId: String, subTask: SubTask): Result<Unit> {
@@ -249,21 +267,25 @@ class TaskRepository @Inject constructor(
         }
     }
 
-    suspend fun addAttachment(taskId: String, attachmentUrl: String): Result<Unit> = try {
-        tasksCollection.document(taskId)
-            .update("attachments", com.google.firebase.firestore.FieldValue.arrayUnion(attachmentUrl))
-            .await()
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
+    suspend fun addAttachment(taskId: String, attachmentUrl: String): Result<Unit> {
+        return try {
+            tasksCollection.document(taskId)
+                .update("attachments", com.google.firebase.firestore.FieldValue.arrayUnion(attachmentUrl))
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
-    suspend fun updateTaskPriority(taskId: String, priority: TaskPriority): Result<Unit> = try {
-        tasksCollection.document(taskId)
-            .update("priority", priority.name, "updatedAt", Timestamp.now())
-            .await()
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
+    suspend fun updateTaskPriority(taskId: String, priority: TaskPriority): Result<Unit> {
+        return try {
+            tasksCollection.document(taskId)
+                .update("priority", priority.name, "updatedAt", Timestamp.now())
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 } 

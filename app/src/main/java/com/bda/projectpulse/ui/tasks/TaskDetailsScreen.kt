@@ -158,11 +158,19 @@ private fun TaskDetails(
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Box {
-                            Button(
-                                onClick = { showStatusMenu = true },
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .clickable { showStatusMenu = true }
+                                    .padding(vertical = 4.dp)
                             ) {
                                 TaskStatusChip(status = task.status)
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(start = 4.dp)
+                                )
                             }
                             
                             DropdownMenu(
