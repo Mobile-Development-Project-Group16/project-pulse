@@ -17,6 +17,10 @@ class UserRepository @Inject constructor(
         return userDataSource.getUserById(userId)
     }
 
+    suspend fun getCurrentUser(): User? {
+        return userDataSource.getCurrentUser()
+    }
+
     suspend fun createUser(user: User) {
         userDataSource.createUser(user)
     }

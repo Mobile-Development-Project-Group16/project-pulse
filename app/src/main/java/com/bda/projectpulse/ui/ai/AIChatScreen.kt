@@ -19,7 +19,6 @@ import com.bda.projectpulse.data.models.AIChatMessage
 fun AIChatScreen(
     projectId: String,
     projectName: String,
-    apiKey: String,
     onNavigateBack: () -> Unit,
     viewModel: AIChatViewModel = hiltViewModel()
 ) {
@@ -27,6 +26,11 @@ fun AIChatScreen(
     val messages by viewModel.messages.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
+
+    // Load chat history when screen opens
+    LaunchedEffect(projectId) {
+        viewModel.loadChatHistory(projectId)
+    }
 
     Scaffold(
         topBar = {
@@ -40,67 +44,82 @@ fun AIChatScreen(
             )
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Messages list
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                items(messages) { message ->
-                    MessageBubble(
-                        message = message,
-                        isUser = message.role == "user"
+                // Messages list
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(messages) { message ->
+                        MessageBubble(
+                            message = message,
+                            isUser = message.role == "user"
+                        )
+                    }
+                }
+
+                // Error message
+                error?.let {
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     )
+                }
+
+                // Input field
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = messageText,
+                        onValueChange = { messageText = it },
+                        modifier = Modifier.weight(1f),
+                        placeholder = { Text("Type your message...") },
+                        enabled = !isLoading
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    IconButton(
+                        onClick = {
+                            if (messageText.isNotBlank()) {
+                                viewModel.sendMessage(
+                                    message = messageText,
+                                    projectId = projectId,
+                                    projectName = projectName
+                                )
+                                messageText = ""
+                            }
+                        },
+                        enabled = messageText.isNotBlank() && !isLoading
+                    ) {
+                        Icon(Icons.Default.Send, contentDescription = "Send")
+                    }
                 }
             }
 
-            // Error message
-            error?.let {
-                Text(
-                    text = it,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-            }
-
-            // Input field
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = messageText,
-                    onValueChange = { messageText = it },
-                    modifier = Modifier.weight(1f),
-                    placeholder = { Text("Type your message...") },
-                    enabled = !isLoading
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                IconButton(
-                    onClick = {
-                        if (messageText.isNotBlank()) {
-                            viewModel.sendMessage(
-                                apiKey = apiKey,
-                                message = messageText,
-                                projectId = projectId,
-                                projectName = projectName
-                            )
-                            messageText = ""
-                        }
-                    },
-                    enabled = messageText.isNotBlank() && !isLoading
+            // Loading indicator
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 80.dp),
+                    contentAlignment = Alignment.BottomCenter
                 ) {
-                    Icon(Icons.Default.Send, contentDescription = "Send")
+                    CircularProgressIndicator()
                 }
             }
         }

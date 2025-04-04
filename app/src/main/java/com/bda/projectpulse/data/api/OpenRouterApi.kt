@@ -8,7 +8,10 @@ import retrofit2.http.Headers
 import retrofit2.http.POST
 
 interface OpenRouterApi {
-    @Headers("Content-Type: application/json")
+    @Headers(
+        "Content-Type: application/json",
+        "X-ASSISTANT-API-KEY: cursor-v1"
+    )
     @POST("chat/completions")
     suspend fun chatCompletion(
         @Header("Authorization") apiKey: String,

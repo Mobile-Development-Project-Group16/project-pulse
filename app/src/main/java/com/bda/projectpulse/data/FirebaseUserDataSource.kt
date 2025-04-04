@@ -1,6 +1,7 @@
 package com.bda.projectpulse.data
 
 import com.bda.projectpulse.models.User
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.snapshots
 import com.google.firebase.firestore.ktx.toObject
@@ -25,6 +26,20 @@ class FirebaseUserDataSource @Inject constructor(
     override fun getUserById(userId: String): Flow<User> {
         return usersCollection.document(userId).snapshots()
             .map { snapshot -> snapshot.toObject<User>() ?: throw IllegalStateException("User not found") }
+    }
+
+    override suspend fun getCurrentUser(): User? {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        return if (currentUser != null) {
+            try {
+                val snapshot = usersCollection.document(currentUser.uid).get().await()
+                snapshot.toObject<User>()
+            } catch (e: Exception) {
+                null
+            }
+        } else {
+            null
+        }
     }
 
     override suspend fun createUser(user: User) {

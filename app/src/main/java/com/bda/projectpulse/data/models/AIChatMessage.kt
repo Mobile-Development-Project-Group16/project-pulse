@@ -6,8 +6,11 @@ data class AIChatMessage(
 )
 
 data class AIChatRequest(
-    val model: String = "deepseek/deepseek-r1:free",
-    val messages: List<AIChatMessage>
+    val model: String,
+    val messages: List<AIChatMessage>,
+    val stream: Boolean = false,
+    val temperature: Double = 0.7,
+    val max_tokens: Int = 1000
 )
 
 data class AIChatResponse(

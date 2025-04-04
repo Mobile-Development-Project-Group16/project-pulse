@@ -2,12 +2,11 @@ package com.bda.projectpulse.ui.ai
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bda.projectpulse.data.AIChatRepository
+import com.bda.projectpulse.data.ChatMessage
 import com.bda.projectpulse.data.models.AIChatMessage
-import com.bda.projectpulse.data.repository.AIChatRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,8 +24,36 @@ class AIChatViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    private var currentProjectId: String? = null
+
+    fun loadChatHistory(projectId: String) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                currentProjectId = projectId
+
+                // Load chat history from repository
+                val history = repository.getChatHistory(projectId)
+                
+                // Convert ChatMessage to AIChatMessage
+                val messages = history.map { message ->
+                    AIChatMessage(
+                        role = message.role,
+                        content = message.content
+                    )
+                }
+
+                _messages.value = messages
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Failed to load chat history"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
     fun sendMessage(
-        apiKey: String,
         message: String,
         projectId: String,
         projectName: String
@@ -36,19 +63,22 @@ class AIChatViewModel @Inject constructor(
                 _isLoading.value = true
                 _error.value = null
 
-                val updatedMessages = _messages.value.toMutableList().apply {
-                    add(AIChatMessage("user", message))
+                // Add user message immediately
+                _messages.update { currentMessages ->
+                    currentMessages + AIChatMessage("user", message)
                 }
 
-                val response = repository.sendMessage(
-                    apiKey = apiKey,
-                    messages = updatedMessages,
-                    projectId = projectId,
-                    projectName = projectName
-                )
-
-                updatedMessages.add(response.choices.first().message)
-                _messages.value = updatedMessages
+                // Collect AI response
+                repository.sendMessage(projectId, message)
+                    .catch { e -> 
+                        _error.value = e.message ?: "An error occurred"
+                    }
+                    .collect { response ->
+                        val aiMessage = response.choices.first().message
+                        _messages.update { currentMessages ->
+                            currentMessages + aiMessage
+                        }
+                    }
             } catch (e: Exception) {
                 _error.value = e.message ?: "An error occurred"
             } finally {
@@ -58,7 +88,12 @@ class AIChatViewModel @Inject constructor(
     }
 
     fun clearMessages() {
-        _messages.value = emptyList()
-        _error.value = null
+        viewModelScope.launch {
+            currentProjectId?.let { projectId ->
+                repository.clearChatHistory(projectId)
+                _messages.value = emptyList()
+                _error.value = null
+            }
+        }
     }
 } 

@@ -49,4 +49,16 @@ object DataModule {
     fun provideUserRepository(userDataSource: UserDataSource): UserRepository {
         return UserRepository(userDataSource)
     }
+
+    @Provides
+    @Singleton
+    fun provideApiKeyDataSource(firestore: FirebaseFirestore): ApiKeyDataSource {
+        return ApiKeyDataSource(firestore)
+    }
+
+    @Provides
+    @Singleton
+    fun provideChatHistoryDataSource(firestore: FirebaseFirestore): ChatHistoryDataSource {
+        return ChatHistoryDataSource(firestore)
+    }
 } 

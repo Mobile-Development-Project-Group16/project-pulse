@@ -94,13 +94,16 @@ fun ProjectDetailsScreen(
                 actions = {
                     IconButton(
                         onClick = {
-                            navController.navigate(
-                                Screen.AIChat.createRoute(
-                                    projectId = projectId,
-                                    projectName = project?.name ?: "",
-                                    apiKey = "YOUR_OPENROUTER_API_KEY" // TODO: Get from secure storage
+                            project?.let { currentProject ->
+                                val encodedProjectName = java.net.URLEncoder.encode(currentProject.name, "UTF-8")
+                                    .replace("+", "%20")
+                                navController.navigate(
+                                    Screen.AIChat.createRoute(
+                                        projectId = currentProject.id,
+                                        projectName = encodedProjectName
+                                    )
                                 )
-                            )
+                            }
                         }
                     ) {
                         Icon(Icons.Default.Chat, contentDescription = "AI Chat")
