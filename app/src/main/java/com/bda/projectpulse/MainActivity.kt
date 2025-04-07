@@ -11,12 +11,23 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.bda.projectpulse.navigation.AppNavigation
 import com.bda.projectpulse.ui.theme.ProjectPulseTheme
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private lateinit var auth: FirebaseAuth
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Initialize Firebase Auth
+        auth = FirebaseAuth.getInstance()
+        auth.addAuthStateListener { firebaseAuth ->
+            val user = firebaseAuth.currentUser
+            // You can handle auth state changes here if needed
+        }
+
         setContent {
             ProjectPulseTheme {
                 Surface(
@@ -25,7 +36,12 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val navController = rememberNavController()
                     AppNavigation(
-                        navController = navController
+                        navController = navController,
+                        startDestination = if (auth.currentUser != null) {
+                            "project_list"
+                        } else {
+                            "auth"
+                        }
                     )
                 }
             }

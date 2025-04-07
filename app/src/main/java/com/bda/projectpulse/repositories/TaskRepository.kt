@@ -1,5 +1,6 @@
 package com.bda.projectpulse.repositories
 
+import com.bda.projectpulse.data.source.TaskDataSource
 import com.bda.projectpulse.models.*
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
@@ -14,30 +15,36 @@ import javax.inject.Singleton
 
 @Singleton
 class TaskRepository @Inject constructor(
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val taskDataSource: TaskDataSource
 ) {
     private val tasksCollection = firestore.collection("tasks")
 
-    suspend fun createTask(task: Task, createdBy: String): String {
-        return try {
-            val taskData = hashMapOf(
-                "title" to task.title,
-                "description" to task.description,
-                "projectId" to task.projectId,
-                "assigneeIds" to task.assigneeIds,
-                "status" to task.status.name,
-                "priority" to task.priority.name,
-                "dueDate" to task.dueDate,
-                "createdAt" to Timestamp.now(),
-                "updatedAt" to Timestamp.now(),
-                "comments" to task.comments,
-                "subTasks" to task.subTasks,
-                "attachments" to task.attachments,
-                "createdBy" to createdBy
+    suspend fun createTask(task: Task, userId: String): Task {
+        try {
+            println("TaskRepository: Starting task creation for title: ${task.title}")
+            
+            // Validate task data
+            if (task.title.isBlank()) {
+                throw IllegalArgumentException("Task title cannot be empty")
+            }
+            if (task.projectId.isBlank()) {
+                throw IllegalArgumentException("Project ID cannot be empty")
+            }
+            
+            // Create task with creator ID
+            val taskWithCreator = task.copy(
+                createdBy = userId
             )
-            val docRef = tasksCollection.add(taskData).await()
-            docRef.id
+            
+            println("TaskRepository: Calling taskDataSource.createTask")
+            val createdTask = taskDataSource.createTask(taskWithCreator)
+            println("TaskRepository: Task created successfully with ID: ${createdTask.id}")
+            
+            return createdTask
         } catch (e: Exception) {
+            println("TaskRepository: Error creating task - ${e.message}")
+            println("TaskRepository: Stack trace - ${e.stackTrace.joinToString("\n")}")
             throw e
         }
     }

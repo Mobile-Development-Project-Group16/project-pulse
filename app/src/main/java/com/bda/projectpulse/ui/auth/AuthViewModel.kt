@@ -4,13 +4,16 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bda.projectpulse.auth.FirebaseAuthManager
+import com.bda.projectpulse.data.repositories.AuthRepository
 import com.bda.projectpulse.models.User
 import com.bda.projectpulse.models.UserRole
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class AuthFormState(
     val email: String = "",
@@ -28,7 +31,10 @@ sealed class AuthState {
     data class Error(val message: String) : AuthState()
 }
 
-class AuthViewModel : ViewModel() {
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+) : ViewModel() {
     private val authManager = FirebaseAuthManager.getInstance()
     private val TAG = "AuthViewModel"
     
@@ -40,6 +46,12 @@ class AuthViewModel : ViewModel() {
 
     private val _availableRoles = MutableStateFlow<List<UserRole>>(emptyList())
     val availableRoles: StateFlow<List<UserRole>> = _availableRoles.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
 
     init {
         viewModelScope.launch {
@@ -115,64 +127,32 @@ class AuthViewModel : ViewModel() {
         ) }
     }
 
-    fun signIn() {
+    fun login(email: String, password: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
-                _formState.update { it.copy(isLoading = true, error = null) }
-                val result = authManager.signIn(
-                    _formState.value.email,
-                    _formState.value.password
-                )
-                result.fold(
-                    onSuccess = { user ->
-                        _authState.value = AuthState.Authenticated(user)
-                    },
-                    onFailure = { e ->
-                        _formState.update { it.copy(
-                            isLoading = false,
-                            error = e.message ?: "Authentication failed"
-                        ) }
-                        _authState.value = AuthState.Error(e.message ?: "Authentication failed")
-                    }
-                )
+                _isLoading.value = true
+                _error.value = null
+                authRepository.login(email, password)
+                onSuccess()
             } catch (e: Exception) {
-                _formState.update { it.copy(
-                    isLoading = false,
-                    error = e.message ?: "Authentication failed"
-                ) }
-                _authState.value = AuthState.Error(e.message ?: "Authentication failed")
+                _error.value = e.message ?: "Login failed"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
-    fun signUp() {
+    fun register(email: String, password: String, name: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
-                _formState.update { it.copy(isLoading = true, error = null) }
-                val result = authManager.signUp(
-                    _formState.value.email,
-                    _formState.value.password,
-                    _formState.value.displayName,
-                    _formState.value.role
-                )
-                result.fold(
-                    onSuccess = { user ->
-                        _authState.value = AuthState.Authenticated(user)
-                    },
-                    onFailure = { e ->
-                        _formState.update { it.copy(
-                            isLoading = false,
-                            error = e.message ?: "Registration failed"
-                        ) }
-                        _authState.value = AuthState.Error(e.message ?: "Registration failed")
-                    }
-                )
+                _isLoading.value = true
+                _error.value = null
+                authRepository.register(email, password, name)
+                onSuccess()
             } catch (e: Exception) {
-                _formState.update { it.copy(
-                    isLoading = false,
-                    error = e.message ?: "Registration failed"
-                ) }
-                _authState.value = AuthState.Error(e.message ?: "Registration failed")
+                _error.value = e.message ?: "Registration failed"
+            } finally {
+                _isLoading.value = false
             }
         }
     }

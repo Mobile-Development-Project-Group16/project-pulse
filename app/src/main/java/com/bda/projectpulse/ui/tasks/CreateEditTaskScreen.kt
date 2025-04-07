@@ -19,6 +19,10 @@ import com.bda.projectpulse.models.User
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,6 +32,7 @@ fun CreateEditTaskScreen(
     onNavigateBack: () -> Unit,
     viewModel: TaskViewModel = hiltViewModel()
 ) {
+    val scope = rememberCoroutineScope()
     val selectedTask by viewModel.selectedTask.collectAsStateWithLifecycle(initialValue = null)
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = false)
     val teamMembers by viewModel.projectTeamMembers.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -163,9 +168,23 @@ fun CreateEditTaskScreen(
                                 createdBy = selectedTask?.createdBy ?: ""
                             )
 
-                            viewModel.saveTask(task)
-                            if (error == null) {
-                                onNavigateBack()
+                            scope.launch {
+                                try {
+                                    withContext(NonCancellable) {
+                                        viewModel.saveTask(task)
+                                        // Wait briefly to ensure the save operation completes
+                                        delay(500)
+                                    }
+                                    if (viewModel.error.value == null) {
+                                        onNavigateBack()
+                                    } else {
+                                        errorMessage = viewModel.error.value ?: "Failed to save task"
+                                        showError = true
+                                    }
+                                } catch (e: Exception) {
+                                    errorMessage = e.message ?: "Failed to save task"
+                                    showError = true
+                                }
                             }
                         },
                         enabled = !isLoading

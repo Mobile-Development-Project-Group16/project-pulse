@@ -11,10 +11,15 @@ import com.bda.projectpulse.models.UserRole
 import com.bda.projectpulse.repositories.TaskRepository
 import com.bda.projectpulse.repositories.UserRepository
 import com.bda.projectpulse.repositories.ProjectRepository
+import com.google.firebase.Timestamp
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.supervisorScope
 import javax.inject.Inject
+import kotlinx.coroutines.NonCancellable
 
 data class TaskUiState(
     val tasks: List<Task> = emptyList(),
@@ -157,43 +162,67 @@ class TaskViewModel @Inject constructor(
 
     fun saveTask(task: Task) {
         viewModelScope.launch {
-            _isLoading.value = true
-            error.value = null
             try {
-                val currentUser = userRepository.getCurrentUser()
-                if (currentUser == null) {
-                    error.value = "User not authenticated"
-                    return@launch
-                }
-                
-                // Check if user has permission to manage tasks
-                if (currentUser.role != UserRole.ADMIN && currentUser.role != UserRole.MANAGER) {
-                    error.value = "Only administrators and managers can manage tasks"
-                    return@launch
-                }
-                
-                if (task.id.isEmpty()) {
-                    taskRepository.createTask(task, currentUser.uid)
-                } else {
-                    // For task updates, check if the user is the creator or an admin
-                    val existingTask = taskRepository.getTaskById(task.id).first()
-                    if (existingTask != null && existingTask.createdBy != currentUser.uid && currentUser.role != UserRole.ADMIN) {
-                        error.value = "You can only edit tasks you created"
-                        return@launch
+                _isLoading.value = true
+                error.value = null
+                println("Starting saveTask coroutine for task: ${task.title}")
+
+                withContext(NonCancellable + Dispatchers.IO) {
+                    val currentUser = userRepository.getCurrentUser()
+                    
+                    if (currentUser == null) {
+                        error.value = "User not authenticated"
+                        println("Error: User not authenticated")
+                        return@withContext
                     }
                     
-                    taskRepository.updateTask(task)
-                }
-                
-                // Refresh the task list and selected task
-                loadTasksByProjectId(task.projectId)
-                if (task.id.isNotEmpty()) {
-                    loadTaskById(task.id)
+                    // Check if user has permission to manage tasks
+                    if (currentUser.role != UserRole.ADMIN && currentUser.role != UserRole.MANAGER) {
+                        error.value = "Only administrators and managers can manage tasks"
+                        println("Error: User does not have permission to manage tasks")
+                        return@withContext
+                    }
+                    
+                    // Create or update task
+                    if (task.id == "new" || task.id.isEmpty()) {
+                        println("Creating new task with title: ${task.title}")
+                        val taskWithCreator = task.copy(
+                            id = "", // Let Firestore generate the ID
+                            createdBy = currentUser.uid,
+                            createdAt = Timestamp.now(),
+                            updatedAt = Timestamp.now()
+                        )
+                        val createdTask = taskRepository.createTask(taskWithCreator, currentUser.uid)
+                        println("Task created successfully with ID: ${createdTask.id}")
+                        
+                        // Refresh the task list after creation
+                        loadTasksByProjectId(task.projectId)
+                    } else {
+                        // For task updates, check if the user is the creator or an admin
+                        val existingTask = taskRepository.getTaskById(task.id).first()
+                        if (existingTask != null && existingTask.createdBy != currentUser.uid && currentUser.role != UserRole.ADMIN) {
+                            error.value = "You can only edit tasks you created"
+                            println("Error: User cannot edit task they did not create")
+                            return@withContext
+                        }
+                        
+                        println("Updating task with ID: ${task.id}")
+                        val updatedTask = task.copy(updatedAt = Timestamp.now())
+                        taskRepository.updateTask(updatedTask)
+                        println("Task updated successfully")
+                        
+                        // Refresh the task list and selected task after update
+                        loadTasksByProjectId(task.projectId)
+                        loadTaskById(task.id)
+                    }
                 }
             } catch (e: Exception) {
-                error.value = e.message
+                println("Error in saveTask: ${e.message}")
+                println("Stack trace: ${e.stackTrace.joinToString("\n")}")
+                error.value = "Failed to save task: ${e.message}"
             } finally {
                 _isLoading.value = false
+                println("Finished saveTask coroutine for task: ${task.title}")
             }
         }
     }

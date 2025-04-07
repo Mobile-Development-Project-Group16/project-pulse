@@ -89,7 +89,22 @@ fun AuthScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { if (formState.isRegistering) viewModel.signUp() else viewModel.signIn() },
+            onClick = { 
+                if (formState.isRegistering) {
+                    viewModel.register(
+                        formState.email,
+                        formState.password,
+                        formState.displayName,
+                        onAuthSuccess
+                    )
+                } else {
+                    viewModel.login(
+                        formState.email,
+                        formState.password,
+                        onAuthSuccess
+                    )
+                }
+            },
             modifier = Modifier.fillMaxWidth(),
             enabled = !formState.isLoading
         ) {

@@ -31,6 +31,7 @@ fun ProjectListScreen(
     onNavigateToCreateProject: () -> Unit,
     onNavigateToEditProject: (String) -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToAdminSettings: () -> Unit,
     viewModel: ProjectViewModel = hiltViewModel()
 ) {
     val projects by viewModel.projects.collectAsStateWithLifecycle()
