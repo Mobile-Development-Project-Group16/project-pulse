@@ -1,15 +1,18 @@
 package com.bda.projectpulse.models
 
-import com.google.firebase.Timestamp
+import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.PropertyName
 
 data class ChatMessage(
+    @DocumentId
     val id: String = "",
     val projectId: String = "",
     val senderId: String = "",
     val senderName: String = "",
-    val content: String = "",
-    val timestamp: Timestamp = Timestamp.now(),
-    val type: MessageType = MessageType.TEXT
+    val text: String = "",
+    @PropertyName("timestamp")
+    val timestamp: Long = System.currentTimeMillis(),
+    val isFromCurrentUser: Boolean = false
 )
 
 enum class MessageType {

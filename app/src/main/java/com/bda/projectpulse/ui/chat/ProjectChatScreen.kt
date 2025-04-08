@@ -10,9 +10,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bda.projectpulse.models.ChatMessage
 import com.bda.projectpulse.ui.chat.ChatViewModel
 import java.text.SimpleDateFormat
@@ -20,12 +20,14 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatScreen(
+fun ProjectChatScreen(
     projectId: String,
     onNavigateBack: () -> Unit,
     viewModel: ChatViewModel = hiltViewModel()
 ) {
-    val messages by viewModel.messages.collectAsState()
+    val messages by viewModel.messages.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val error by viewModel.error.collectAsStateWithLifecycle()
     var messageText by remember { mutableStateOf("") }
 
     LaunchedEffect(projectId) {
@@ -53,7 +55,7 @@ fun ChatScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(horizontal = 16.dp),
                 reverseLayout = true
             ) {
                 items(messages) { message ->
@@ -91,36 +93,39 @@ fun ChatScreen(
 
 @Composable
 private fun ChatMessageItem(message: ChatMessage) {
-    val dateFormat = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
+    val dateFormat = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault())
     val formattedDate = dateFormat.format(Date(message.timestamp))
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 8.dp),
         horizontalAlignment = if (message.isFromCurrentUser) Alignment.End else Alignment.Start
     ) {
         Card(
             modifier = Modifier.padding(horizontal = 8.dp),
             colors = CardDefaults.cardColors(
-                containerColor = if (message.isFromCurrentUser) 
-                    MaterialTheme.colorScheme.primaryContainer 
-                else 
+                containerColor = if (message.isFromCurrentUser) {
+                    MaterialTheme.colorScheme.primary
+                } else {
                     MaterialTheme.colorScheme.surfaceVariant
+                }
             )
         ) {
             Column(
                 modifier = Modifier.padding(8.dp)
             ) {
                 Text(
+                    text = message.senderName,
+                    style = MaterialTheme.typography.labelSmall
+                )
+                Text(
                     text = message.text,
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
                     text = formattedDate,
-                    style = MaterialTheme.typography.bodySmall,
-                    textAlign = TextAlign.End,
-                    modifier = Modifier.fillMaxWidth()
+                    style = MaterialTheme.typography.labelSmall
                 )
             }
         }

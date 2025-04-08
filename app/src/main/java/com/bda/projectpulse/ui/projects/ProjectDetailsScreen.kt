@@ -36,6 +36,7 @@ fun ProjectDetailsScreen(
     onNavigateToChat: () -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToEditProject: () -> Unit,
+    onNavigateToTaskList: () -> Unit,
     viewModel: ProjectViewModel = hiltViewModel()
 ) {
     val project by viewModel.selectedProject.collectAsStateWithLifecycle()
@@ -164,7 +165,7 @@ fun ProjectDetailsScreen(
                         
                         // Tasks
                         Button(
-                            onClick = onNavigateToCreateTask,
+                            onClick = onNavigateToTaskList,
                             modifier = Modifier.weight(1f)
                         ) {
                             Icon(Icons.Default.List, contentDescription = "Tasks")

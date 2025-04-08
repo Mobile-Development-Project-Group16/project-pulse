@@ -13,19 +13,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.bda.projectpulse.ui.admin.AdminSettingsScreen
-import com.bda.projectpulse.ui.admin.AdminSettingsViewModel
-import com.bda.projectpulse.ui.auth.LoginScreen
-import com.bda.projectpulse.ui.auth.RegisterScreen
+import com.bda.projectpulse.ui.auth.AuthScreen
+import com.bda.projectpulse.ui.auth.AuthViewModel
 import com.bda.projectpulse.ui.profile.ProfileScreen
 import com.bda.projectpulse.ui.projects.*
 import com.bda.projectpulse.ui.tasks.*
 import com.bda.projectpulse.ui.team.TeamMemberScreen
+import com.bda.projectpulse.ui.admin.AdminSettingsScreen
+import com.bda.projectpulse.ui.admin.AdminSettingsViewModel
 import com.bda.projectpulse.ui.ai.AIChatScreen
-import com.bda.projectpulse.ui.chat.ChatScreen
-import com.bda.projectpulse.ui.projects.ProjectViewModel
-import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bda.projectpulse.ui.chat.ProjectChatScreen
+import com.bda.projectpulse.ui.team.TeamManagementScreen
 
 @Composable
 fun AppNavigation(
@@ -37,16 +35,18 @@ fun AppNavigation(
         startDestination = startDestination
     ) {
         composable(route = Screen.Auth.route) {
+            val viewModel: AuthViewModel = hiltViewModel()
             AuthScreen(
-                onNavigateToProjects = {
-                    navController.navigate(Screen.ProjectList.route) {
+                viewModel = viewModel,
+                onAuthSuccess = {
+                    navController.navigate(Screen.Projects.route) {
                         popUpTo(Screen.Auth.route) { inclusive = true }
                     }
                 }
             )
         }
         
-        composable(route = Screen.ProjectList.route) {
+        composable(route = Screen.Projects.route) {
             ProjectListScreen(
                 onNavigateToProjectDetails = { projectId ->
                     navController.navigate(Screen.ProjectDetails.createRoute(projectId))
@@ -56,6 +56,12 @@ fun AppNavigation(
                 },
                 onNavigateToProfile = {
                     navController.navigate(Screen.Profile.route)
+                },
+                onNavigateToEditProject = { projectId ->
+                    navController.navigate(Screen.EditProject.createRoute(projectId))
+                },
+                onNavigateToAdminSettings = {
+                    navController.navigate(Screen.AdminSettings.route)
                 }
             )
         }
@@ -68,10 +74,25 @@ fun AppNavigation(
             ProjectDetailsScreen(
                 projectId = projectId,
                 onNavigateBack = { navController.navigateUp() },
-                onNavigateToEditProject = { projectId ->
+                onNavigateToCreateTask = { 
+                    navController.navigate(Screen.CreateTask.createRoute(projectId))
+                },
+                onNavigateToTaskDetails = { taskId ->
+                    navController.navigate(Screen.TaskDetails.createRoute(taskId))
+                },
+                onNavigateToTeamManagement = {
+                    navController.navigate(Screen.TeamManagement.createRoute(projectId))
+                },
+                onNavigateToAIChat = {
+                    navController.navigate(Screen.AIChat.createRoute(projectId))
+                },
+                onNavigateToEditProject = {
                     navController.navigate(Screen.EditProject.createRoute(projectId))
                 },
-                onNavigateToTaskList = { projectId ->
+                onNavigateToChat = {
+                    navController.navigate(Screen.ProjectChat.createRoute(projectId))
+                },
+                onNavigateToTaskList = {
                     navController.navigate(Screen.TaskList.createRoute(projectId))
                 }
             )
@@ -96,10 +117,10 @@ fun AppNavigation(
             TaskListScreen(
                 projectId = projectId,
                 onNavigateBack = { navController.navigateUp() },
-                onNavigateToTaskDetails = { taskId ->
+                onTaskClick = { taskId ->
                     navController.navigate(Screen.TaskDetails.createRoute(taskId))
                 },
-                onNavigateToCreateTask = { projectId ->
+                onCreateTask = {
                     navController.navigate(Screen.CreateTask.createRoute(projectId))
                 }
             )
@@ -113,8 +134,8 @@ fun AppNavigation(
             TaskDetailsScreen(
                 taskId = taskId,
                 onNavigateBack = { navController.navigateUp() },
-                onNavigateToEditTask = { taskId ->
-                    navController.navigate(Screen.EditTask.createRoute(taskId))
+                onEditTask = { task ->
+                    navController.navigate(Screen.EditTask.createRoute(task.projectId, task.id))
                 }
             )
         }
@@ -124,7 +145,7 @@ fun AppNavigation(
             arguments = listOf(navArgument("projectId") { type = NavType.StringType })
         ) { backStackEntry ->
             val projectId = backStackEntry.arguments?.getString("projectId") ?: return@composable
-            CreateTaskScreen(
+            CreateEditTaskScreen(
                 projectId = projectId,
                 onNavigateBack = { navController.navigateUp() }
             )
@@ -137,64 +158,86 @@ fun AppNavigation(
                     navController.navigate(Screen.Auth.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                navController = navController
+            )
+        }
+
+        composable(
+            route = Screen.TeamMembers.route,
+            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
+            TeamMemberScreen(
+                userId = userId,
+                onNavigateBack = { navController.navigateUp() },
+                onTaskClick = { taskId ->
+                    navController.navigate(Screen.TaskDetails.createRoute(taskId))
                 }
             )
         }
 
-        composable(route = Screen.TeamMembers.route) {
-            TeamMemberScreen(
-                onNavigateBack = { navController.navigateUp() }
-            )
-        }
-
         composable(route = Screen.AdminSettings.route) {
+            val viewModel: AdminSettingsViewModel = hiltViewModel()
             AdminSettingsScreen(
+                viewModel = viewModel,
                 onNavigateBack = { navController.navigateUp() }
             )
         }
 
-        composable(route = Screen.AIChat.route) {
+        composable(
+            route = Screen.AIChat.route,
+            arguments = listOf(navArgument("projectId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val projectId = backStackEntry.arguments?.getString("projectId") ?: return@composable
+            val viewModel: ProjectViewModel = hiltViewModel()
+            val project by viewModel.selectedProject.collectAsStateWithLifecycle()
+            
+            LaunchedEffect(projectId) {
+                viewModel.loadProjectById(projectId)
+            }
+            
             AIChatScreen(
+                projectId = projectId,
+                projectName = project?.name ?: "Project",
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        composable(
+            route = Screen.ProjectChat.route,
+            arguments = listOf(navArgument("projectId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val projectId = backStackEntry.arguments?.getString("projectId") ?: return@composable
+            val viewModel: ProjectViewModel = hiltViewModel()
+            val project by viewModel.selectedProject.collectAsStateWithLifecycle()
+            
+            LaunchedEffect(projectId) {
+                viewModel.loadProjectById(projectId)
+            }
+            
+            ProjectChatScreen(
+                projectId = projectId,
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        composable(
+            route = Screen.TeamManagement.route,
+            arguments = listOf(navArgument("projectId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val projectId = backStackEntry.arguments?.getString("projectId") ?: return@composable
+            val viewModel: ProjectViewModel = hiltViewModel()
+            val project by viewModel.selectedProject.collectAsStateWithLifecycle()
+            
+            LaunchedEffect(projectId) {
+                viewModel.loadProjectById(projectId)
+            }
+            
+            TeamManagementScreen(
+                projectId = projectId,
                 onNavigateBack = { navController.navigateUp() }
             )
         }
     }
-}
-
-sealed class Screen(val route: String) {
-    object Login : Screen("login")
-    object Register : Screen("register")
-    object Projects : Screen("projects")
-    object ProjectDetails : Screen("project_details/{projectId}") {
-        fun createRoute(projectId: String) = "project_details/$projectId"
-    }
-    object TeamManagement : Screen("team_management/{projectId}") {
-        fun createRoute(projectId: String) = "team_management/$projectId"
-    }
-    object TaskList : Screen("tasks/{projectId}") {
-        fun createRoute(projectId: String) = "tasks/$projectId"
-    }
-    object TaskDetails : Screen("task_details/{taskId}") {
-        fun createRoute(taskId: String) = "task_details/$taskId"
-    }
-    object AdminSettings : Screen("admin_settings")
-    object AIChat : Screen("ai_chat/{projectId}") {
-        fun createRoute(projectId: String) = "ai_chat/$projectId"
-    }
-    object ProjectChat : Screen("project_chat/{projectId}") {
-        fun createRoute(projectId: String) = "project_chat/$projectId"
-    }
-    object CreateProject : Screen("create_project")
-    object EditProject : Screen("edit_project/{projectId}") {
-        fun createRoute(projectId: String) = "edit_project/$projectId"
-    }
-    object CreateTask : Screen("create_task/{projectId}") {
-        fun createRoute(projectId: String) = "create_task/$projectId"
-    }
-    object EditTask : Screen("edit_task/{projectId}/{taskId}") {
-        fun createRoute(projectId: String, taskId: String) = "edit_task/$projectId/$taskId"
-    }
-    object Profile : Screen("profile")
-    object Auth : Screen("auth")
-    object TeamMembers : Screen("team_members")
 }
