@@ -12,7 +12,8 @@ data class ChatMessage(
     val text: String = "",
     @PropertyName("timestamp")
     val timestamp: Long = System.currentTimeMillis(),
-    val isFromCurrentUser: Boolean = false
+    val isFromCurrentUser: Boolean = false,
+    val attachments: List<Attachment> = emptyList()
 )
 
 enum class MessageType {

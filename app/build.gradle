@@ -4,8 +4,6 @@ plugins {
     id 'com.google.gms.google-services'
     id 'com.google.devtools.ksp'
     id 'dagger.hilt.android.plugin'
-    id 'com.google.dagger.hilt.android'
-    id 'kotlin-kapt'
 }
 
 android {
@@ -75,6 +73,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth-ktx'
     implementation 'com.google.firebase:firebase-firestore-ktx'
     implementation 'com.google.firebase:firebase-database-ktx:20.3.0'
+    implementation 'com.google.firebase:firebase-storage-ktx'
 
     implementation "androidx.lifecycle:lifecycle-runtime-compose:2.7.0"
 

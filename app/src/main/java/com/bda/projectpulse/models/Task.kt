@@ -15,7 +15,7 @@ data class Task(
     val updatedAt: Timestamp = Timestamp.now(),
     val comments: List<Comment> = emptyList(),
     val subTasks: List<SubTask> = emptyList(),
-    val attachments: List<String> = emptyList(),
+    val attachments: List<Attachment> = emptyList(),
     val createdBy: String = ""
 )
 
@@ -32,13 +32,4 @@ data class SubTask(
     val title: String = "",
     val completed: Boolean = false,
     val assigneeId: String? = null
-)
-
-data class Attachment(
-    val id: String = "",
-    val name: String = "",
-    val url: String = "",
-    val type: String = "",
-    val size: Long = 0,
-    val uploadedAt: Timestamp = Timestamp.now()
 ) 

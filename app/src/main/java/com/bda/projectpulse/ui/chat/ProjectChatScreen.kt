@@ -1,18 +1,24 @@
 package com.bda.projectpulse.ui.chat
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bda.projectpulse.models.Attachment
+import com.bda.projectpulse.models.AttachmentType
 import com.bda.projectpulse.models.ChatMessage
 import com.bda.projectpulse.ui.chat.ChatViewModel
 import java.text.SimpleDateFormat
@@ -29,6 +35,14 @@ fun ProjectChatScreen(
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
     var messageText by remember { mutableStateOf("") }
+    var selectedAttachments by remember { mutableStateOf<List<Uri>>(emptyList()) }
+
+    val context = LocalContext.current
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris ->
+        selectedAttachments = uris
+    }
 
     LaunchedEffect(projectId) {
         viewModel.loadMessages(projectId)
@@ -63,12 +77,35 @@ fun ProjectChatScreen(
                 }
             }
 
+            // Show selected attachments
+            if (selectedAttachments.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Attachments: ${selectedAttachments.size}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    IconButton(onClick = { selectedAttachments = emptyList() }) {
+                        Icon(Icons.Default.Close, contentDescription = "Clear attachments")
+                    }
+                }
+            }
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                IconButton(onClick = { filePickerLauncher.launch("*/*") }) {
+                    Icon(Icons.Default.AttachFile, contentDescription = "Attach file")
+                }
                 OutlinedTextField(
                     value = messageText,
                     onValueChange = { messageText = it },
@@ -78,9 +115,10 @@ fun ProjectChatScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 IconButton(
                     onClick = {
-                        if (messageText.isNotBlank()) {
-                            viewModel.sendMessage(projectId, messageText)
+                        if (messageText.isNotBlank() || selectedAttachments.isNotEmpty()) {
+                            viewModel.sendMessage(projectId, messageText, selectedAttachments)
                             messageText = ""
+                            selectedAttachments = emptyList()
                         }
                     }
                 ) {
@@ -123,11 +161,48 @@ private fun ChatMessageItem(message: ChatMessage) {
                     text = message.text,
                     style = MaterialTheme.typography.bodyMedium
                 )
+                if (message.attachments.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    message.attachments.forEach { attachment ->
+                        AttachmentItem(attachment = attachment)
+                    }
+                }
                 Text(
                     text = formattedDate,
-                    style = MaterialTheme.typography.labelSmall
+                    style = MaterialTheme.typography.labelSmall,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun AttachmentItem(attachment: Attachment) {
+    val icon = when (attachment.type) {
+        AttachmentType.IMAGE -> Icons.Default.Image
+        AttachmentType.PDF -> Icons.Default.PictureAsPdf
+        AttachmentType.DOCUMENT -> Icons.Default.Description
+        AttachmentType.EXCEL -> Icons.Default.TableChart
+        else -> Icons.Default.Attachment
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = attachment.type.name,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = attachment.name,
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 } 

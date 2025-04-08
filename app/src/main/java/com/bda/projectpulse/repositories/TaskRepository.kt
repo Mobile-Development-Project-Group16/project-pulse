@@ -216,7 +216,16 @@ class TaskRepository @Inject constructor(
                                 assigneeId = subTaskData["assigneeId"] as? String
                             )
                         } ?: emptyList(),
-                        attachments = (data["attachments"] as? List<String>) ?: emptyList(),
+                        attachments = (data["attachments"] as? List<Map<String, Any>>)?.map { attachmentData ->
+                            Attachment(
+                                id = attachmentData["id"] as? String ?: "",
+                                name = attachmentData["name"] as? String ?: "",
+                                url = attachmentData["url"] as? String ?: "",
+                                type = AttachmentType.valueOf(attachmentData["type"] as? String ?: AttachmentType.OTHER.name),
+                                size = (attachmentData["size"] as? Long) ?: 0L,
+                                uploadedAt = (attachmentData["uploadedAt"] as? Timestamp) ?: Timestamp.now()
+                            )
+                        } ?: emptyList(),
                         createdBy = (data["createdBy"] as? String) ?: ""
                     )
                 }
