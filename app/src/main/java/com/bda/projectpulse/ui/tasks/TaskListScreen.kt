@@ -21,6 +21,8 @@ import com.bda.projectpulse.ui.components.TaskStatusChip
 import com.bda.projectpulse.ui.components.SwipeRefresh
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.navigation.NavHostController
+import com.bda.projectpulse.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +31,7 @@ fun TaskListScreen(
     onNavigateBack: () -> Unit,
     onTaskClick: (String) -> Unit,
     onCreateTask: () -> Unit,
+    navController: NavHostController,
     viewModel: TaskViewModel = hiltViewModel()
 ) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
@@ -52,8 +55,22 @@ fun TaskListScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onCreateTask) {
-                Icon(Icons.Default.Add, contentDescription = "Create Task")
+            Row(
+                modifier = Modifier.padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FloatingActionButton(
+                    onClick = { navController.navigate(Screen.SubmitTask.createRoute(projectId)) },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Submit Task")
+                }
+                FloatingActionButton(
+                    onClick = onCreateTask,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(Icons.Default.Create, contentDescription = "Create Task")
+                }
             }
         }
     ) { padding ->

@@ -94,7 +94,8 @@ fun AppNavigation(
                 },
                 onNavigateToTaskList = {
                     navController.navigate(Screen.TaskList.createRoute(projectId))
-                }
+                },
+                navController = navController
             )
         }
 
@@ -105,7 +106,8 @@ fun AppNavigation(
             val projectId = backStackEntry.arguments?.getString("projectId") ?: return@composable
             EditProjectScreen(
                 projectId = projectId,
-                onNavigateBack = { navController.navigateUp() }
+                onNavigateBack = { navController.navigateUp() },
+                navController = navController
             )
         }
 
@@ -122,7 +124,8 @@ fun AppNavigation(
                 },
                 onCreateTask = {
                     navController.navigate(Screen.CreateTask.createRoute(projectId))
-                }
+                },
+                navController = navController
             )
         }
 
@@ -145,9 +148,25 @@ fun AppNavigation(
             arguments = listOf(navArgument("projectId") { type = NavType.StringType })
         ) { backStackEntry ->
             val projectId = backStackEntry.arguments?.getString("projectId") ?: return@composable
+            val viewModel: TaskViewModel = hiltViewModel()
             CreateEditTaskScreen(
                 projectId = projectId,
-                onNavigateBack = { navController.navigateUp() }
+                taskId = null,
+                onNavigateBack = { navController.navigateUp() },
+                navController = navController,
+                viewModel = viewModel
+            )
+        }
+
+        composable(
+            route = Screen.SubmitTask.route,
+            arguments = listOf(navArgument("projectId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val projectId = backStackEntry.arguments?.getString("projectId") ?: return@composable
+            SubmitTaskScreen(
+                projectId = projectId,
+                onNavigateBack = { navController.navigateUp() },
+                navController = navController
             )
         }
 
@@ -237,6 +256,31 @@ fun AppNavigation(
             TeamManagementScreen(
                 projectId = projectId,
                 onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        composable(route = Screen.CreateProject.route) {
+            CreateEditProjectScreen(
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        composable(
+            route = Screen.EditTask.route,
+            arguments = listOf(
+                navArgument("projectId") { type = NavType.StringType },
+                navArgument("taskId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val projectId = backStackEntry.arguments?.getString("projectId") ?: return@composable
+            val taskId = backStackEntry.arguments?.getString("taskId") ?: return@composable
+            val viewModel: TaskViewModel = hiltViewModel()
+            CreateEditTaskScreen(
+                projectId = projectId,
+                taskId = taskId,
+                onNavigateBack = { navController.navigateUp() },
+                navController = navController,
+                viewModel = viewModel
             )
         }
     }

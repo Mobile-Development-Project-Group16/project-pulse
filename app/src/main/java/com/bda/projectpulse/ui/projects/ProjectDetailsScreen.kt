@@ -37,6 +37,7 @@ fun ProjectDetailsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToEditProject: () -> Unit,
     onNavigateToTaskList: () -> Unit,
+    navController: NavHostController,
     viewModel: ProjectViewModel = hiltViewModel()
 ) {
     val project by viewModel.selectedProject.collectAsStateWithLifecycle()
@@ -112,18 +113,21 @@ fun ProjectDetailsScreen(
             )
         },
         floatingActionButton = {
-            val canCreateTask = currentUser != null && (
-                currentUser?.role == UserRole.ADMIN || 
-                currentUser?.role == UserRole.MANAGER ||
-                project?.teamMembers?.contains(currentUser?.uid) == true ||
-                project?.ownerId == currentUser?.uid
-            )
-            
-            if (canCreateTask) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 FloatingActionButton(
-                    onClick = onNavigateToCreateTask
+                    onClick = { navController.navigate(Screen.SubmitTask.createRoute(projectId)) },
+                    modifier = Modifier.size(48.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Create Task")
+                    Icon(Icons.Default.Add, contentDescription = "Submit Task")
+                }
+                FloatingActionButton(
+                    onClick = onNavigateToCreateTask,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(Icons.Default.Create, contentDescription = "Create Task")
                 }
             }
         }

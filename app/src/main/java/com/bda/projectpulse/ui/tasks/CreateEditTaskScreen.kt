@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
+import androidx.navigation.NavHostController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,6 +31,7 @@ fun CreateEditTaskScreen(
     projectId: String,
     taskId: String? = null,
     onNavigateBack: () -> Unit,
+    navController: NavHostController,
     viewModel: TaskViewModel = hiltViewModel()
 ) {
     val scope = rememberCoroutineScope()

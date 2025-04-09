@@ -14,12 +14,14 @@ import com.bda.projectpulse.models.Project
 import com.bda.projectpulse.models.ProjectStatus
 import com.google.firebase.Timestamp
 import java.util.*
+import androidx.navigation.NavHostController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProjectScreen(
     projectId: String,
     onNavigateBack: () -> Unit,
+    navController: NavHostController,
     viewModel: ProjectViewModel = hiltViewModel()
 ) {
     val project by viewModel.selectedProject.collectAsStateWithLifecycle()

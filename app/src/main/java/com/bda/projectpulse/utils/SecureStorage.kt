@@ -14,6 +14,7 @@ class SecureStorage @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     private val masterKey = MasterKey.Builder(context)
+        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
         .setKeyGenParameterSpec(
             KeyGenParameterSpec.Builder(
                 "_androidx_security_master_key_",
@@ -34,37 +35,27 @@ class SecureStorage @Inject constructor(
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
 
-    fun saveString(key: String, value: String): Boolean {
-        return try {
-            sharedPreferences.edit().putString(key, value).commit()
-            true
-        } catch (e: Exception) {
-            false
-        }
+    fun saveString(key: String, value: String) {
+        sharedPreferences.edit().putString(key, value).apply()
     }
 
     fun getString(key: String): String? {
-        return try {
-            sharedPreferences.getString(key, null)
-        } catch (e: Exception) {
-            null
-        }
+        return sharedPreferences.getString(key, null)
     }
 
-    fun removeString(key: String): Boolean {
-        return try {
-            sharedPreferences.edit().remove(key).commit()
-            true
-        } catch (e: Exception) {
-            false
-        }
+    fun removeString(key: String) {
+        sharedPreferences.edit().remove(key).apply()
     }
 
-    fun saveApiKey(apiKey: String): Boolean {
-        return saveString("openrouter_api_key", apiKey)
+    fun saveApiKey(apiKey: String) {
+        sharedPreferences.edit().putString(KEY_OPENROUTER_API, apiKey).apply()
     }
 
     fun getApiKey(): String? {
-        return getString("openrouter_api_key")
+        return sharedPreferences.getString(KEY_OPENROUTER_API, null)
+    }
+
+    companion object {
+        private const val KEY_OPENROUTER_API = "openrouter_api_key"
     }
 } 
