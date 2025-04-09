@@ -11,12 +11,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bda.projectpulse.models.Task
 import com.bda.projectpulse.models.TaskPriority
 import com.bda.projectpulse.models.TaskStatus
+import com.bda.projectpulse.models.User
 import com.bda.projectpulse.ui.components.TaskPriorityBadge
 import com.bda.projectpulse.ui.components.TaskStatusChip
 import java.text.SimpleDateFormat
@@ -30,10 +32,9 @@ fun TaskDetailsScreen(
     onEditTask: (Task) -> Unit,
     viewModel: TaskViewModel = hiltViewModel()
 ) {
-    val task by viewModel.selectedTask.collectAsStateWithLifecycle(initialValue = null)
-    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = false)
-    val error = viewModel.error.value
-    val users by viewModel.users.collectAsStateWithLifecycle(initialValue = emptyList())
+    val task: Task? by viewModel.selectedTask.collectAsStateWithLifecycle()
+    val error: String? by viewModel.error.collectAsStateWithLifecycle()
+    val users: List<User> by viewModel.users.collectAsStateWithLifecycle()
     val assignees = remember(task?.assigneeIds, users) {
         task?.assigneeIds?.mapNotNull { userId ->
             users.find { it.uid == userId }
@@ -48,7 +49,7 @@ fun TaskDetailsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = task?.title ?: "Task Details") },
+                title = { Text("Task Details") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -64,27 +65,58 @@ fun TaskDetailsScreen(
             )
         }
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .padding(16.dp)
         ) {
-            when {
-                isLoading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                error != null -> Text(
-                    text = "Error: ${error}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-                task != null -> TaskDetails(
-                    task = task!!,
+            task?.let { currentTask ->
+                TaskDetails(
+                    task = currentTask,
                     assignees = assignees,
                     viewModel = viewModel
                 )
-                else -> Text(
-                    text = "Task not found",
-                    modifier = Modifier.align(Alignment.Center)
+
+                if (currentTask.status == TaskStatus.IN_REVIEW) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Button(
+                            onClick = { viewModel.approveTask(currentTask.id) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Green
+                            )
+                        ) {
+                            Text("Approve")
+                        }
+                        Button(
+                            onClick = { viewModel.rejectTask(currentTask.id, "") },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Red
+                            )
+                        ) {
+                            Text("Reject")
+                        }
+                    }
+                }
+            } ?: run {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            error?.let { errorMessage ->
+                Text(
+                    text = errorMessage,
+                    color = Color.Red,
+                    modifier = Modifier.padding(16.dp)
                 )
             }
         }
@@ -94,7 +126,7 @@ fun TaskDetailsScreen(
 @Composable
 private fun TaskDetails(
     task: Task,
-    assignees: List<com.bda.projectpulse.models.User>,
+    assignees: List<User>,
     viewModel: TaskViewModel
 ) {
     var showStatusMenu by remember { mutableStateOf(false) }
@@ -120,7 +152,7 @@ private fun TaskDetails(
                     ) {
                         Text(
                             text = task.title,
-                            style = MaterialTheme.typography.headlineSmall
+                            style = MaterialTheme.typography.titleLarge
                         )
                         
                         // Priority badge with dropdown menu
@@ -138,7 +170,7 @@ private fun TaskDetails(
                                     DropdownMenuItem(
                                         text = { Text(priority.name) },
                                         onClick = {
-                                            viewModel.updateTaskPriority(task.id, priority)
+                                            viewModel.updateTaskPriority(priority)
                                             showPriorityMenu = false
                                         }
                                     )
@@ -181,7 +213,7 @@ private fun TaskDetails(
                                     DropdownMenuItem(
                                         text = { Text(status.name.replace("_", " ")) },
                                         onClick = {
-                                            viewModel.updateTaskStatus(task.id, status)
+                                            viewModel.updateTaskStatus(status)
                                             showStatusMenu = false
                                         },
                                         leadingIcon = {
@@ -190,7 +222,8 @@ private fun TaskDetails(
                                                     TaskStatus.TODO -> Icons.Default.Assignment
                                                     TaskStatus.IN_PROGRESS -> Icons.Default.DirectionsRun
                                                     TaskStatus.IN_REVIEW -> Icons.Default.RateReview
-                                                    TaskStatus.COMPLETED -> Icons.Default.Done
+                                                    TaskStatus.APPROVED -> Icons.Default.CheckCircle
+                                                    TaskStatus.REJECTED -> Icons.Default.Cancel
                                                 },
                                                 contentDescription = null
                                             )
@@ -308,12 +341,12 @@ private fun TaskDetails(
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column {
                                         Text(
-                                            user.displayName ?: "Unnamed User",
+                                            text = user.displayName,
                                             style = MaterialTheme.typography.bodyMedium
                                         )
                                         if (user.email.isNotEmpty()) {
                                             Text(
-                                                user.email,
+                                                text = user.email,
                                                 style = MaterialTheme.typography.bodySmall
                                             )
                                         }

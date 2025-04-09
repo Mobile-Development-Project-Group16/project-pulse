@@ -51,7 +51,8 @@ class TaskViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
-    val error = mutableStateOf<String?>(null)
+    private val _error = MutableStateFlow<String?>(null)
+    val error = _error.asStateFlow()
 
     private val _uiState = MutableStateFlow(TaskUiState())
     val uiState: StateFlow<TaskUiState> = _uiState.asStateFlow()
@@ -63,10 +64,10 @@ class TaskViewModel @Inject constructor(
     fun loadTaskById(taskId: String) {
         viewModelScope.launch {
             _isLoading.value = true
-            error.value = null
+            _error.value = null
             try {
                 taskRepository.getTaskById(taskId)
-                    .catch { e -> error.value = e.message }
+                    .catch { e -> _error.value = e.message }
                     .collect { task ->
                         _selectedTask.value = task
                     }
@@ -79,10 +80,10 @@ class TaskViewModel @Inject constructor(
     fun loadTasks() {
         viewModelScope.launch {
             _isLoading.value = true
-            error.value = null
+            _error.value = null
             try {
                 taskRepository.getTasks()
-                    .catch { e -> error.value = e.message }
+                    .catch { e -> _error.value = e.message }
                     .collect { taskList ->
                         _tasks.value = taskList
                     }
@@ -95,16 +96,16 @@ class TaskViewModel @Inject constructor(
     fun loadTasksByProjectId(projectId: String) {
         viewModelScope.launch {
             _isLoading.value = true
-            error.value = null
+            _error.value = null
             try {
                 val currentUser = userRepository.getCurrentUser()
                 if (currentUser == null) {
-                    error.value = "User not authenticated"
+                    _error.value = "User not authenticated"
                     return@launch
                 }
                 
                 taskRepository.getProjectTasks(projectId, currentUser.role, currentUser.uid)
-                    .catch { e -> error.value = e.message }
+                    .catch { e -> _error.value = e.message }
                     .collect { tasks ->
                         _tasks.value = tasks
                     }
@@ -117,13 +118,16 @@ class TaskViewModel @Inject constructor(
     fun loadUsers() {
         viewModelScope.launch {
             try {
+                _isLoading.value = true
                 userRepository.getUsers()
-                    .catch { e -> error.value = e.message }
+                    .catch { e -> _error.value = e.message }
                     .collect { userList ->
                         _users.value = userList
                     }
             } catch (e: Exception) {
-                error.value = e.message
+                _error.value = e.message
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -131,21 +135,21 @@ class TaskViewModel @Inject constructor(
     fun loadProjectTeamMembers(projectId: String) {
         viewModelScope.launch {
             _isLoading.value = true
-            error.value = null
+            _error.value = null
             try {
                 // First, get the project details to get team member IDs
                 val projectFlow = projectRepository.getProjectById(projectId)
                 val project = projectFlow.firstOrNull()
                 
                 if (project == null) {
-                    error.value = "Project not found"
+                    _error.value = "Project not found"
                     _isLoading.value = false
                     return@launch
                 }
                 
                 // Get all users and filter to only include team members
                 userRepository.getUsers()
-                    .catch { e -> error.value = e.message }
+                    .catch { e -> _error.value = e.message }
                     .collect { allUsers ->
                         val teamMembers = allUsers.filter { user ->
                             project.teamMembers.contains(user.uid) || project.ownerId == user.uid
@@ -154,7 +158,7 @@ class TaskViewModel @Inject constructor(
                         _isLoading.value = false
                     }
             } catch (e: Exception) {
-                error.value = e.message
+                _error.value = e.message
                 _isLoading.value = false
             }
         }
@@ -164,21 +168,21 @@ class TaskViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                error.value = null
+                _error.value = null
                 println("Starting saveTask coroutine for task: ${task.title}")
 
                 withContext(NonCancellable + Dispatchers.IO) {
                     val currentUser = userRepository.getCurrentUser()
                     
                     if (currentUser == null) {
-                        error.value = "User not authenticated"
+                        _error.value = "User not authenticated"
                         println("Error: User not authenticated")
                         return@withContext
                     }
                     
                     // Check if user has permission to manage tasks
                     if (currentUser.role != UserRole.ADMIN && currentUser.role != UserRole.MANAGER) {
-                        error.value = "Only administrators and managers can manage tasks"
+                        _error.value = "Only administrators and managers can manage tasks"
                         println("Error: User does not have permission to manage tasks")
                         return@withContext
                     }
@@ -192,8 +196,8 @@ class TaskViewModel @Inject constructor(
                             createdAt = Timestamp.now(),
                             updatedAt = Timestamp.now()
                         )
-                        val createdTask = taskRepository.createTask(taskWithCreator, currentUser.uid)
-                        println("Task created successfully with ID: ${createdTask.id}")
+                        taskRepository.createTask(taskWithCreator)
+                        println("Task created successfully")
                         
                         // Refresh the task list after creation
                         loadTasksByProjectId(task.projectId)
@@ -201,7 +205,7 @@ class TaskViewModel @Inject constructor(
                         // For task updates, check if the user is the creator or an admin
                         val existingTask = taskRepository.getTaskById(task.id).first()
                         if (existingTask != null && existingTask.createdBy != currentUser.uid && currentUser.role != UserRole.ADMIN) {
-                            error.value = "You can only edit tasks you created"
+                            _error.value = "You can only edit tasks you created"
                             println("Error: User cannot edit task they did not create")
                             return@withContext
                         }
@@ -219,7 +223,7 @@ class TaskViewModel @Inject constructor(
             } catch (e: Exception) {
                 println("Error in saveTask: ${e.message}")
                 println("Stack trace: ${e.stackTrace.joinToString("\n")}")
-                error.value = "Failed to save task: ${e.message}"
+                _error.value = "Failed to save task: ${e.message}"
             } finally {
                 _isLoading.value = false
                 println("Finished saveTask coroutine for task: ${task.title}")
@@ -227,37 +231,15 @@ class TaskViewModel @Inject constructor(
         }
     }
 
-    fun updateTaskStatus(taskId: String, status: TaskStatus) {
+    fun updateTaskStatus(status: TaskStatus) {
         viewModelScope.launch {
-            _isLoading.value = true
-            error.value = null
             try {
-                if (taskId.isBlank()) {
-                    error.value = "Invalid task ID"
-                    return@launch
+                _selectedTask.value?.let { task ->
+                    taskRepository.updateTaskStatus(task.id, status)
+                    loadTaskById(task.id) // Refresh the task
                 }
-
-                val task = taskRepository.getTaskById(taskId).first()
-                if (task == null) {
-                    error.value = "Task not found"
-                    return@launch
-                }
-
-                taskRepository.updateTaskStatus(taskId, status)
-                    .onSuccess {
-                        // Refresh both the selected task and the task list
-                        loadTaskById(taskId)
-                        task.projectId.let { projectId ->
-                            loadTasksByProjectId(projectId)
-                        }
-                    }
-                    .onFailure { e ->
-                        error.value = e.message ?: "Failed to update task status"
-                    }
             } catch (e: Exception) {
-                error.value = e.message ?: "An unexpected error occurred"
-            } finally {
-                _isLoading.value = false
+                _error.value = e.message
             }
         }
     }
@@ -265,24 +247,24 @@ class TaskViewModel @Inject constructor(
     fun deleteTask(taskId: String, projectId: String) {
         viewModelScope.launch {
             _isLoading.value = true
-            error.value = null
+            _error.value = null
             try {
                 val currentUser = userRepository.getCurrentUser()
                 if (currentUser == null) {
-                    error.value = "User not authenticated"
+                    _error.value = "User not authenticated"
                     return@launch
                 }
                 
                 // Check if user has permission to delete tasks
                 if (currentUser.role != UserRole.ADMIN && currentUser.role != UserRole.MANAGER) {
-                    error.value = "Only administrators and managers can delete tasks"
+                    _error.value = "Only administrators and managers can delete tasks"
                     return@launch
                 }
                 
                 // For task deletion, check if the user is the creator or an admin
                 val existingTask = taskRepository.getTaskById(taskId).first()
                 if (existingTask != null && existingTask.createdBy != currentUser.uid && currentUser.role != UserRole.ADMIN) {
-                    error.value = "You can only delete tasks you created"
+                    _error.value = "You can only delete tasks you created"
                     return@launch
                 }
                 
@@ -291,7 +273,7 @@ class TaskViewModel @Inject constructor(
                         loadTasksByProjectId(projectId)
                     }
                     .onFailure { e ->
-                        error.value = e.message
+                        _error.value = e.message
                     }
             } finally {
                 _isLoading.value = false
@@ -308,14 +290,19 @@ class TaskViewModel @Inject constructor(
             try {
                 val currentUser = userRepository.getCurrentUser()
                 if (currentUser == null) {
-                    error.value = "User not authenticated"
+                    _error.value = "User not authenticated"
                     return@launch
                 }
                 
-                taskRepository.createTask(task, currentUser.uid)
-                error.value = null
+                val taskWithCreator = task.copy(
+                    createdBy = currentUser.uid,
+                    createdAt = Timestamp.now(),
+                    updatedAt = Timestamp.now()
+                )
+                taskRepository.createTask(taskWithCreator)
+                _error.value = null
             } catch (e: Exception) {
-                error.value = e.message
+                _error.value = e.message
             }
         }
     }
@@ -324,27 +311,19 @@ class TaskViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 taskRepository.updateTask(task)
-                error.value = null
+                _error.value = null
             } catch (e: Exception) {
-                error.value = e.message
+                _error.value = e.message
             }
         }
     }
 
     fun clearError() {
-        error.value = null
+        _error.value = null
     }
 
     fun getUserName(userId: String): String {
-        // First check in project team members
-        val teamMember = _projectTeamMembers.value.find { it.uid == userId }
-        if (teamMember != null) {
-            return teamMember.displayName
-        }
-        
-        // Then check in all users
-        val user = _users.value.find { it.uid == userId }
-        return user?.displayName ?: "Unknown User"
+        return _users.value.find { it.uid == userId }?.displayName ?: "Unknown User"
     }
     
     fun getUserEmail(userId: String): String {
@@ -385,37 +364,104 @@ class TaskViewModel @Inject constructor(
         }
     }
 
-    fun updateTaskPriority(taskId: String, priority: TaskPriority) {
+    fun updateTaskPriority(priority: TaskPriority) {
         viewModelScope.launch {
-            _isLoading.value = true
-            error.value = null
             try {
-                if (taskId.isBlank()) {
-                    error.value = "Invalid task ID"
-                    return@launch
+                _selectedTask.value?.let { task ->
+                    taskRepository.updateTaskPriority(task.id, priority)
+                    loadTaskById(task.id) // Refresh the task
                 }
-
-                val task = taskRepository.getTaskById(taskId).first()
-                if (task == null) {
-                    error.value = "Task not found"
-                    return@launch
-                }
-
-                taskRepository.updateTaskPriority(taskId, priority)
-                    .onSuccess {
-                        // Refresh both the selected task and the task list
-                        loadTaskById(taskId)
-                        task.projectId.let { projectId ->
-                            loadTasksByProjectId(projectId)
-                        }
-                    }
-                    .onFailure { e ->
-                        error.value = e.message ?: "Failed to update task priority"
-                    }
             } catch (e: Exception) {
-                error.value = e.message ?: "An unexpected error occurred"
-            } finally {
-                _isLoading.value = false
+                _error.value = e.message
+            }
+        }
+    }
+
+    fun submitTask(taskId: String) {
+        viewModelScope.launch {
+            try {
+                val task = _selectedTask.value ?: return@launch
+                val currentUser = userRepository.getCurrentUser() ?: return@launch
+
+                // Check if the user is assigned to this task
+                if (!task.assigneeIds.contains(currentUser.uid)) {
+                    _error.value = "You must be assigned to this task to submit it"
+                    return@launch
+                }
+
+                val updatedTask = task.copy(
+                    status = TaskStatus.IN_REVIEW,
+                    updatedAt = Timestamp.now()
+                )
+                updateTask(updatedTask)
+                _selectedTask.value = updatedTask
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
+
+    fun approveTask(taskId: String) {
+        viewModelScope.launch {
+            try {
+                val task = _selectedTask.value ?: return@launch
+                val currentUser = userRepository.getCurrentUser() ?: return@launch
+
+                // Check if user has permission to approve tasks
+                if (currentUser.role != UserRole.ADMIN && currentUser.role != UserRole.MANAGER) {
+                    _error.value = "Only administrators and managers can approve tasks"
+                    return@launch
+                }
+
+                val updatedTask = task.copy(
+                    status = TaskStatus.APPROVED,
+                    updatedAt = Timestamp.now()
+                )
+                updateTask(updatedTask)
+                _selectedTask.value = updatedTask
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
+
+    fun rejectTask(taskId: String, comment: String) {
+        viewModelScope.launch {
+            try {
+                val task = _selectedTask.value ?: return@launch
+                val currentUser = userRepository.getCurrentUser() ?: return@launch
+
+                // Check if user has permission to reject tasks
+                if (currentUser.role != UserRole.ADMIN && currentUser.role != UserRole.MANAGER) {
+                    _error.value = "Only administrators and managers can reject tasks"
+                    return@launch
+                }
+
+                if (comment.isBlank()) {
+                    _error.value = "Please provide a reason for rejection"
+                    return@launch
+                }
+
+                val updatedTask = task.copy(
+                    status = TaskStatus.IN_PROGRESS,
+                    rejectionComment = comment,
+                    updatedAt = Timestamp.now()
+                )
+                updateTask(updatedTask)
+                _selectedTask.value = updatedTask
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
+
+    fun getAssignedTasks(): Flow<List<Task>> {
+        return tasks.map { taskList ->
+            taskList.filter { task ->
+                val currentUser = userRepository.getCurrentUser()
+                currentUser?.let { user ->
+                    task.assigneeIds.contains(user.uid)
+                } ?: false
             }
         }
     }

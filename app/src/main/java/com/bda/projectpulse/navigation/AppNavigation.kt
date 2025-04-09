@@ -122,9 +122,6 @@ fun AppNavigation(
                 onTaskClick = { taskId ->
                     navController.navigate(Screen.TaskDetails.createRoute(taskId))
                 },
-                onCreateTask = {
-                    navController.navigate(Screen.CreateTask.createRoute(projectId))
-                },
                 navController = navController
             )
         }

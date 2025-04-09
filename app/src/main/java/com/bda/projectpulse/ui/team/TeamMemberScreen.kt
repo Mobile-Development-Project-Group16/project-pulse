@@ -16,6 +16,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.bda.projectpulse.models.*
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
 
 @Composable
 fun TaskStatusBadge(status: TaskStatus) {
@@ -23,7 +26,8 @@ fun TaskStatusBadge(status: TaskStatus) {
         TaskStatus.TODO -> Color(0xFFE3F2FD) to Color(0xFF1976D2)
         TaskStatus.IN_PROGRESS -> Color(0xFFF3E5F5) to Color(0xFF7B1FA2)
         TaskStatus.IN_REVIEW -> Color(0xFFFFF3E0) to Color(0xFFF57C00)
-        TaskStatus.COMPLETED -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
+        TaskStatus.APPROVED -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
+        TaskStatus.REJECTED -> Color(0xFFFFEBEE) to Color(0xFFC62828)
     }
 
     Surface(
@@ -31,9 +35,9 @@ fun TaskStatusBadge(status: TaskStatus) {
         shape = MaterialTheme.shapes.small
     ) {
         Text(
-            text = status.name,
+            text = status.name.replace("_", " "),
             color = textColor,
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
         )
     }
@@ -57,6 +61,30 @@ fun TaskPriorityBadge(priority: TaskPriority) {
             color = textColor,
             style = MaterialTheme.typography.labelSmall,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        )
+    }
+}
+
+@Composable
+fun TaskStatusChip(status: TaskStatus) {
+    val (backgroundColor, textColor) = when (status) {
+        TaskStatus.TODO -> Color.Gray to Color.White
+        TaskStatus.IN_PROGRESS -> Color.Blue to Color.White
+        TaskStatus.IN_REVIEW -> Color.Yellow to Color.Black
+        TaskStatus.APPROVED -> Color.Green to Color.White
+        TaskStatus.REJECTED -> Color.Red to Color.White
+    }
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(backgroundColor)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = status.name.replace("_", " "),
+            color = textColor,
+            style = MaterialTheme.typography.bodySmall
         )
     }
 }

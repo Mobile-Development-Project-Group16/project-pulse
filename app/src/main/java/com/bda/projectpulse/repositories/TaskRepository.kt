@@ -9,6 +9,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,55 +20,18 @@ class TaskRepository @Inject constructor(
     private val taskDataSource: TaskDataSource
 ) {
     private val tasksCollection = firestore.collection("tasks")
+    private val usersCollection = firestore.collection("users")
 
-    suspend fun createTask(task: Task, userId: String): Task {
-        try {
-            println("TaskRepository: Starting task creation for title: ${task.title}")
-            
-            // Validate task data
-            if (task.title.isBlank()) {
-                throw IllegalArgumentException("Task title cannot be empty")
-            }
-            if (task.projectId.isBlank()) {
-                throw IllegalArgumentException("Project ID cannot be empty")
-            }
-            
-            // Create task with creator ID
-            val taskWithCreator = task.copy(
-                createdBy = userId
-            )
-            
-            println("TaskRepository: Calling taskDataSource.createTask")
-            val createdTask = taskDataSource.createTask(taskWithCreator)
-            println("TaskRepository: Task created successfully with ID: ${createdTask.id}")
-            
-            return createdTask
-        } catch (e: Exception) {
-            println("TaskRepository: Error creating task - ${e.message}")
-            println("TaskRepository: Stack trace - ${e.stackTrace.joinToString("\n")}")
-            throw e
-        }
+    suspend fun getTask(taskId: String): Task {
+        return taskDataSource.getTaskById(taskId).first()
+    }
+
+    suspend fun createTask(task: Task): Task {
+        return taskDataSource.createTask(task)
     }
 
     suspend fun updateTask(task: Task) {
-        try {
-            val taskData = hashMapOf(
-                "title" to task.title,
-                "description" to task.description,
-                "projectId" to task.projectId,
-                "assigneeIds" to task.assigneeIds,
-                "status" to task.status.name,
-                "priority" to task.priority.name,
-                "dueDate" to task.dueDate,
-                "updatedAt" to Timestamp.now(),
-                "comments" to task.comments,
-                "subTasks" to task.subTasks,
-                "attachments" to task.attachments
-            )
-            tasksCollection.document(task.id).update(taskData as Map<String, Any>).await()
-        } catch (e: Exception) {
-            throw e
-        }
+        taskDataSource.updateTask(task)
     }
 
     suspend fun updateTaskStatus(taskId: String, status: TaskStatus): Result<Unit> {
@@ -183,59 +147,6 @@ class TaskRepository @Inject constructor(
         awaitClose { subscription.remove() }
     }
 
-    fun getTasksByProject(projectId: String): Flow<List<Task>> = flow {
-        try {
-            val snapshot = tasksCollection.whereEqualTo("projectId", projectId).get().await()
-            val tasks = snapshot.documents.mapNotNull { doc ->
-                doc.data?.let { data ->
-                    Task(
-                        id = doc.id,
-                        title = data["title"] as? String ?: "",
-                        description = data["description"] as? String ?: "",
-                        projectId = data["projectId"] as? String ?: "",
-                        assigneeIds = (data["assigneeIds"] as? List<String>) ?: emptyList(),
-                        status = TaskStatus.valueOf(data["status"] as? String ?: TaskStatus.TODO.name),
-                        priority = TaskPriority.valueOf(data["priority"] as? String ?: TaskPriority.MEDIUM.name),
-                        dueDate = data["dueDate"] as? Timestamp,
-                        createdAt = (data["createdAt"] as? Timestamp) ?: Timestamp.now(),
-                        updatedAt = (data["updatedAt"] as? Timestamp) ?: Timestamp.now(),
-                        comments = (data["comments"] as? List<Map<String, Any>>)?.map { commentData ->
-                            Comment(
-                                id = commentData["id"] as? String ?: "",
-                                text = commentData["text"] as? String ?: "",
-                                authorId = commentData["authorId"] as? String ?: "",
-                                createdAt = (commentData["createdAt"] as? Timestamp) ?: Timestamp.now(),
-                                updatedAt = (commentData["updatedAt"] as? Timestamp) ?: Timestamp.now()
-                            )
-                        } ?: emptyList(),
-                        subTasks = (data["subTasks"] as? List<Map<String, Any>>)?.map { subTaskData ->
-                            SubTask(
-                                id = subTaskData["id"] as? String ?: "",
-                                title = subTaskData["title"] as? String ?: "",
-                                completed = subTaskData["completed"] as? Boolean ?: false,
-                                assigneeId = subTaskData["assigneeId"] as? String
-                            )
-                        } ?: emptyList(),
-                        attachments = (data["attachments"] as? List<Map<String, Any>>)?.map { attachmentData ->
-                            Attachment(
-                                id = attachmentData["id"] as? String ?: "",
-                                name = attachmentData["name"] as? String ?: "",
-                                url = attachmentData["url"] as? String ?: "",
-                                type = AttachmentType.valueOf(attachmentData["type"] as? String ?: AttachmentType.OTHER.name),
-                                size = (attachmentData["size"] as? Long) ?: 0L,
-                                uploadedAt = (attachmentData["uploadedAt"] as? Timestamp) ?: Timestamp.now()
-                            )
-                        } ?: emptyList(),
-                        createdBy = (data["createdBy"] as? String) ?: ""
-                    )
-                }
-            }
-            emit(tasks)
-        } catch (e: Exception) {
-            throw e
-        }
-    }
-
     suspend fun assignTask(taskId: String, userId: String): Result<Unit> {
         return try {
             val task = tasksCollection.document(taskId).get().await().toObject(Task::class.java)
@@ -303,5 +214,13 @@ class TaskRepository @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    fun getTasks(projectId: String): Flow<List<Task>> {
+        return taskDataSource.getTasks(projectId)
+    }
+
+    suspend fun getUsers(): List<User> {
+        return taskDataSource.getUsers()
     }
 } 

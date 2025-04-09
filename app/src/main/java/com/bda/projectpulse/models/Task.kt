@@ -16,7 +16,8 @@ data class Task(
     val comments: List<Comment> = emptyList(),
     val subTasks: List<SubTask> = emptyList(),
     val attachments: List<Attachment> = emptyList(),
-    val createdBy: String = ""
+    val createdBy: String = "",
+    val rejectionComment: String = ""
 )
 
 data class Comment(

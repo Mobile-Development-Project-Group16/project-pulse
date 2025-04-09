@@ -23,6 +23,13 @@ import java.text.SimpleDateFormat
 import java.util.*
 import androidx.navigation.NavHostController
 import com.bda.projectpulse.navigation.Screen
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextAlign
+import com.google.firebase.Timestamp
+import androidx.compose.foundation.clickable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,7 +37,6 @@ fun TaskListScreen(
     projectId: String,
     onNavigateBack: () -> Unit,
     onTaskClick: (String) -> Unit,
-    onCreateTask: () -> Unit,
     navController: NavHostController,
     viewModel: TaskViewModel = hiltViewModel()
 ) {
@@ -66,10 +72,28 @@ fun TaskListScreen(
                     Icon(Icons.Default.Add, contentDescription = "Submit Task")
                 }
                 FloatingActionButton(
-                    onClick = onCreateTask,
+                    onClick = {
+                        val newTask = Task(
+                            id = "new",
+                            title = "",
+                            description = "",
+                            projectId = projectId,
+                            assigneeIds = emptyList(),
+                            status = TaskStatus.TODO,
+                            priority = TaskPriority.MEDIUM,
+                            dueDate = null,
+                            createdAt = Timestamp.now(),
+                            updatedAt = Timestamp.now(),
+                            comments = emptyList(),
+                            subTasks = emptyList(),
+                            attachments = emptyList(),
+                            createdBy = ""
+                        )
+                        viewModel.saveTask(newTask)
+                    },
                     modifier = Modifier.size(48.dp)
                 ) {
-                    Icon(Icons.Default.Create, contentDescription = "Create Task")
+                    Icon(Icons.Default.Add, contentDescription = "Create Task")
                 }
             }
         }
@@ -141,7 +165,7 @@ fun TaskListScreen(
                                 task = task,
                                 onClick = { onTaskClick(task.id) },
                                 onStatusChange = { newStatus ->
-                                    viewModel.updateTaskStatus(task.id, newStatus)
+                                    viewModel.updateTaskStatus(newStatus)
                                 },
                                 getUserName = { userId ->
                                     viewModel.getUserName(userId)
@@ -197,10 +221,18 @@ private fun TaskCard(
                 )
                 
                 Box {
-                    IconButton(onClick = { showStatusMenu = !showStatusMenu }) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clickable { showStatusMenu = true }
+                            .padding(vertical = 4.dp)
+                    ) {
+                        TaskStatusChip(status = task.status)
                         Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Change Status"
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(start = 4.dp)
                         )
                     }
                     
@@ -214,17 +246,6 @@ private fun TaskCard(
                                 onClick = {
                                     onStatusChange(status)
                                     showStatusMenu = false
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = when (status) {
-                                            TaskStatus.TODO -> Icons.Default.Assignment
-                                            TaskStatus.IN_PROGRESS -> Icons.Default.DirectionsRun
-                                            TaskStatus.IN_REVIEW -> Icons.Default.RateReview
-                                            TaskStatus.COMPLETED -> Icons.Default.Done
-                                        },
-                                        contentDescription = null
-                                    )
                                 }
                             )
                         }
@@ -263,5 +284,29 @@ private fun TaskCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun TaskStatusChip(status: TaskStatus) {
+    val (backgroundColor, textColor) = when (status) {
+        TaskStatus.TODO -> Color.Gray to Color.White
+        TaskStatus.IN_PROGRESS -> Color.Blue to Color.White
+        TaskStatus.IN_REVIEW -> Color.Yellow to Color.Black
+        TaskStatus.APPROVED -> Color.Green to Color.White
+        TaskStatus.REJECTED -> Color.Red to Color.White
+    }
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(backgroundColor)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = status.name.replace("_", " "),
+            color = textColor,
+            style = MaterialTheme.typography.bodySmall
+        )
     }
 } 

@@ -1,6 +1,9 @@
 package com.bda.projectpulse.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -10,25 +13,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.bda.projectpulse.models.TaskPriority
 import com.bda.projectpulse.models.TaskStatus
+import androidx.compose.ui.draw.clip
 
 @Composable
 fun TaskStatusBadge(status: TaskStatus) {
     val (backgroundColor, textColor) = when (status) {
-        TaskStatus.TODO -> Color(0xFFE3F2FD) to Color(0xFF1976D2)
-        TaskStatus.IN_PROGRESS -> Color(0xFFF3E5F5) to Color(0xFF7B1FA2)
-        TaskStatus.IN_REVIEW -> Color(0xFFFFF3E0) to Color(0xFFF57C00)
-        TaskStatus.COMPLETED -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
+        TaskStatus.TODO -> Color.Gray to Color.White
+        TaskStatus.IN_PROGRESS -> Color.Blue to Color.White
+        TaskStatus.IN_REVIEW -> Color.Yellow to Color.Black
+        TaskStatus.APPROVED -> Color.Green to Color.White
+        TaskStatus.REJECTED -> Color.Red to Color.White
     }
 
-    Surface(
-        color = backgroundColor,
-        shape = MaterialTheme.shapes.small
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(backgroundColor)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Text(
-            text = status.name,
+            text = status.name.replace("_", " "),
             color = textColor,
-            style = MaterialTheme.typography.labelSmall,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            style = MaterialTheme.typography.bodySmall
         )
     }
 }

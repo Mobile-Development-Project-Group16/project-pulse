@@ -4,5 +4,6 @@ enum class TaskStatus {
     TODO,
     IN_PROGRESS,
     IN_REVIEW,
-    COMPLETED
+    APPROVED,
+    REJECTED
 } 

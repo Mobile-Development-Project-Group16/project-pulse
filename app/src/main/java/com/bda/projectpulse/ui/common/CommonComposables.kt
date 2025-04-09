@@ -14,6 +14,10 @@ import androidx.compose.ui.unit.dp
 import com.bda.projectpulse.models.ProjectStatus
 import com.bda.projectpulse.models.TaskStatus
 import com.bda.projectpulse.models.User
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
 
 @Composable
 fun ErrorMessage(error: String) {
@@ -57,22 +61,24 @@ fun StatusChip(status: ProjectStatus) {
 
 @Composable
 fun TaskStatusChip(status: TaskStatus) {
-    val (color, text) = when (status) {
-        TaskStatus.TODO -> MaterialTheme.colorScheme.primary to "To Do"
-        TaskStatus.IN_PROGRESS -> MaterialTheme.colorScheme.secondary to "In Progress"
-        TaskStatus.IN_REVIEW -> MaterialTheme.colorScheme.tertiary to "In Review"
-        TaskStatus.COMPLETED -> MaterialTheme.colorScheme.primary to "Completed"
+    val (backgroundColor, textColor) = when (status) {
+        TaskStatus.TODO -> Color.Gray to Color.White
+        TaskStatus.IN_PROGRESS -> Color.Blue to Color.White
+        TaskStatus.IN_REVIEW -> Color.Yellow to Color.Black
+        TaskStatus.APPROVED -> Color.Green to Color.White
+        TaskStatus.REJECTED -> Color.Red to Color.White
     }
 
-    Surface(
-        color = color.copy(alpha = 0.1f),
-        shape = MaterialTheme.shapes.small
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(backgroundColor)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Text(
-            text = text,
-            color = color,
-            style = MaterialTheme.typography.labelSmall,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            text = status.name.replace("_", " "),
+            color = textColor,
+            style = MaterialTheme.typography.bodySmall
         )
     }
 }
