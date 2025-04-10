@@ -17,7 +17,8 @@ data class Task(
     val subTasks: List<SubTask> = emptyList(),
     val attachments: List<Attachment> = emptyList(),
     val createdBy: String = "",
-    val rejectionComment: String = ""
+    val rejectionComment: String = "",
+    val submissionText: String = ""
 )
 
 data class Comment(

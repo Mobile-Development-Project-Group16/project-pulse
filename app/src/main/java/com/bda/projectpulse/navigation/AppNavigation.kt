@@ -136,7 +136,8 @@ fun AppNavigation(
                 onNavigateBack = { navController.navigateUp() },
                 onEditTask = { task ->
                     navController.navigate(Screen.EditTask.createRoute(task.projectId, task.id))
-                }
+                },
+                navController = navController
             )
         }
 
@@ -157,11 +158,11 @@ fun AppNavigation(
 
         composable(
             route = Screen.SubmitTask.route,
-            arguments = listOf(navArgument("projectId") { type = NavType.StringType })
+            arguments = listOf(navArgument("taskId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val projectId = backStackEntry.arguments?.getString("projectId") ?: return@composable
+            val taskId = backStackEntry.arguments?.getString("taskId") ?: return@composable
             SubmitTaskScreen(
-                projectId = projectId,
+                taskId = taskId,
                 onNavigateBack = { navController.navigateUp() },
                 navController = navController
             )

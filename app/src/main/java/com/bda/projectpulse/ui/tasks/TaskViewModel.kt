@@ -48,6 +48,9 @@ class TaskViewModel @Inject constructor(
     private val _projectTeamMembers = MutableStateFlow<List<User>>(emptyList())
     val projectTeamMembers = _projectTeamMembers.asStateFlow()
 
+    private val _currentUser = MutableStateFlow<User?>(null)
+    val currentUser = _currentUser.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
@@ -59,6 +62,17 @@ class TaskViewModel @Inject constructor(
 
     init {
         loadUsers()
+        loadCurrentUser()
+    }
+
+    fun loadCurrentUser() {
+        viewModelScope.launch {
+            try {
+                _currentUser.value = userRepository.getCurrentUser()
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
     }
 
     fun loadTaskById(taskId: String) {
@@ -244,37 +258,14 @@ class TaskViewModel @Inject constructor(
         }
     }
 
-    fun deleteTask(taskId: String, projectId: String) {
+    fun deleteTask(taskId: String) {
         viewModelScope.launch {
-            _isLoading.value = true
-            _error.value = null
             try {
-                val currentUser = userRepository.getCurrentUser()
-                if (currentUser == null) {
-                    _error.value = "User not authenticated"
-                    return@launch
-                }
-                
-                // Check if user has permission to delete tasks
-                if (currentUser.role != UserRole.ADMIN && currentUser.role != UserRole.MANAGER) {
-                    _error.value = "Only administrators and managers can delete tasks"
-                    return@launch
-                }
-                
-                // For task deletion, check if the user is the creator or an admin
-                val existingTask = taskRepository.getTaskById(taskId).first()
-                if (existingTask != null && existingTask.createdBy != currentUser.uid && currentUser.role != UserRole.ADMIN) {
-                    _error.value = "You can only delete tasks you created"
-                    return@launch
-                }
-                
+                _isLoading.value = true
+                _error.value = null
                 taskRepository.deleteTask(taskId)
-                    .onSuccess {
-                        loadTasksByProjectId(projectId)
-                    }
-                    .onFailure { e ->
-                        _error.value = e.message
-                    }
+            } catch (e: Exception) {
+                _error.value = e.message
             } finally {
                 _isLoading.value = false
             }
@@ -425,32 +416,24 @@ class TaskViewModel @Inject constructor(
         }
     }
 
-    fun rejectTask(taskId: String, comment: String) {
+    fun rejectTask(taskId: String, rejectionComment: String) {
         viewModelScope.launch {
             try {
-                val task = _selectedTask.value ?: return@launch
-                val currentUser = userRepository.getCurrentUser() ?: return@launch
-
-                // Check if user has permission to reject tasks
-                if (currentUser.role != UserRole.ADMIN && currentUser.role != UserRole.MANAGER) {
-                    _error.value = "Only administrators and managers can reject tasks"
-                    return@launch
-                }
-
-                if (comment.isBlank()) {
-                    _error.value = "Please provide a reason for rejection"
-                    return@launch
-                }
-
+                _isLoading.value = true
+                _error.value = null
+                
+                val task = _selectedTask.value ?: throw Exception("Task not found")
                 val updatedTask = task.copy(
                     status = TaskStatus.IN_PROGRESS,
-                    rejectionComment = comment,
-                    updatedAt = Timestamp.now()
+                    rejectionComment = rejectionComment
                 )
-                updateTask(updatedTask)
+                
+                taskRepository.updateTask(updatedTask)
                 _selectedTask.value = updatedTask
             } catch (e: Exception) {
                 _error.value = e.message
+            } finally {
+                _isLoading.value = false
             }
         }
     }

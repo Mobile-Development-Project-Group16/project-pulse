@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import com.google.firebase.Timestamp
 import androidx.compose.foundation.clickable
+import com.bda.projectpulse.models.UserRole
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +44,7 @@ fun TaskListScreen(
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val error = viewModel.error.value
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
 
     // Load tasks when the screen is first displayed
     LaunchedEffect(projectId) {
@@ -61,36 +63,9 @@ fun TaskListScreen(
             )
         },
         floatingActionButton = {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            if (currentUser?.role == UserRole.ADMIN || currentUser?.role == UserRole.MANAGER) {
                 FloatingActionButton(
-                    onClick = { navController.navigate(Screen.SubmitTask.createRoute(projectId)) },
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Submit Task")
-                }
-                FloatingActionButton(
-                    onClick = {
-                        val newTask = Task(
-                            id = "new",
-                            title = "",
-                            description = "",
-                            projectId = projectId,
-                            assigneeIds = emptyList(),
-                            status = TaskStatus.TODO,
-                            priority = TaskPriority.MEDIUM,
-                            dueDate = null,
-                            createdAt = Timestamp.now(),
-                            updatedAt = Timestamp.now(),
-                            comments = emptyList(),
-                            subTasks = emptyList(),
-                            attachments = emptyList(),
-                            createdBy = ""
-                        )
-                        viewModel.saveTask(newTask)
-                    },
+                    onClick = { navController.navigate(Screen.CreateTask.createRoute(projectId)) },
                     modifier = Modifier.size(48.dp)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Create Task")

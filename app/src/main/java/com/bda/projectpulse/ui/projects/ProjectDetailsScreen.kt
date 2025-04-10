@@ -113,16 +113,7 @@ fun ProjectDetailsScreen(
             )
         },
         floatingActionButton = {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                FloatingActionButton(
-                    onClick = { navController.navigate(Screen.SubmitTask.createRoute(projectId)) },
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Submit Task")
-                }
+            if (currentUser?.role == UserRole.ADMIN || currentUser?.role == UserRole.MANAGER) {
                 FloatingActionButton(
                     onClick = onNavigateToCreateTask,
                     modifier = Modifier.size(48.dp)

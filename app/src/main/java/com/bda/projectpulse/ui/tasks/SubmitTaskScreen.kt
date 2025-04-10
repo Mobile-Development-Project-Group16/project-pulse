@@ -3,13 +3,17 @@ package com.bda.projectpulse.ui.tasks
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -17,6 +21,8 @@ import com.bda.projectpulse.R
 import com.bda.projectpulse.models.TaskStatus
 import com.bda.projectpulse.models.Task
 import com.bda.projectpulse.models.TaskPriority
+import com.bda.projectpulse.models.Attachment
+import com.bda.projectpulse.models.AttachmentType
 import com.bda.projectpulse.ui.components.*
 import com.bda.projectpulse.ui.theme.ProjectPulseTheme
 import kotlinx.coroutines.flow.StateFlow
@@ -24,38 +30,42 @@ import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
 import androidx.navigation.NavHostController
+import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubmitTaskScreen(
-    projectId: String,
+    taskId: String,
     onNavigateBack: () -> Unit,
-    navController: NavHostController,
+    navController: NavController,
     viewModel: TaskViewModel = hiltViewModel()
 ) {
-    var title by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var priority by remember { mutableStateOf(TaskPriority.MEDIUM) }
-    var dueDate by remember { mutableStateOf<Date?>(null) }
-    var showDatePicker by remember { mutableStateOf(false) }
+    var submissionText by remember { mutableStateOf("") }
     var showError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var attachments by remember { mutableStateOf<List<Attachment>>(emptyList()) }
+    var showAttachmentDialog by remember { mutableStateOf(false) }
+    var attachmentUrl by remember { mutableStateOf("") }
 
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val error = viewModel.error.value
+    val task by viewModel.selectedTask.collectAsStateWithLifecycle()
+
+    LaunchedEffect(taskId) {
+        viewModel.loadTaskById(taskId)
+    }
 
     LaunchedEffect(error) {
         if (error != null) {
             showError = true
-            errorMessage = error ?: "An error occurred"
+            errorMessage = error
         }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Submit New Task") },
+                title = { Text("Submit Task") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -73,123 +83,127 @@ fun SubmitTaskScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("Task Title") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text("Description") },
+                value = submissionText,
+                onValueChange = { submissionText = it },
+                label = { Text("Submission Text") },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3
             )
 
-            // Priority Selection
-            Text("Priority", style = MaterialTheme.typography.titleMedium)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                TaskPriority.values().forEach { taskPriority ->
-                    FilterChip(
-                        selected = priority == taskPriority,
-                        onClick = { priority = taskPriority },
-                        label = { Text(taskPriority.name) }
-                    )
-                }
-            }
+            // Attachments Section
+            Text(
+                text = "Attachments",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
 
-            // Due Date Selection
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { showDatePicker = true },
-                    modifier = Modifier.weight(1f)
+            if (attachments.isNotEmpty()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
                 ) {
-                    Icon(Icons.Default.CalendarToday, contentDescription = "Select Date")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(dueDate?.let { SimpleDateFormat("MMM dd, yyyy").format(it) } ?: "Select Due Date")
+                    items(attachments) { attachment ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AttachFile,
+                                contentDescription = null,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text(
+                                text = attachment.url,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(
+                                onClick = {
+                                    attachments = attachments.filter { it != attachment }
+                                }
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = "Remove attachment")
+                            }
+                        }
+                    }
                 }
             }
 
-            if (showDatePicker) {
-                val datePickerState = rememberDatePickerState()
-                androidx.compose.material3.DatePickerDialog(
-                    onDismissRequest = { showDatePicker = false },
+            Button(
+                onClick = { showAttachmentDialog = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                Text("Add Attachment")
+            }
+
+            if (showAttachmentDialog) {
+                AlertDialog(
+                    onDismissRequest = { showAttachmentDialog = false },
+                    title = { Text("Add Attachment") },
+                    text = {
+                        OutlinedTextField(
+                            value = attachmentUrl,
+                            onValueChange = { attachmentUrl = it },
+                            label = { Text("Attachment URL") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
                     confirmButton = {
                         TextButton(
                             onClick = {
-                                datePickerState.selectedDateMillis?.let {
-                                    dueDate = Date(it)
+                                if (attachmentUrl.isNotBlank()) {
+                                    attachments = attachments + Attachment(
+                                        id = UUID.randomUUID().toString(),
+                                        url = attachmentUrl,
+                                        name = attachmentUrl.substringAfterLast("/"),
+                                        type = AttachmentType.OTHER,
+                                        uploadedAt = Timestamp.now()
+                                    )
+                                    attachmentUrl = ""
+                                    showAttachmentDialog = false
                                 }
-                                showDatePicker = false
                             }
                         ) {
-                            Text("OK")
+                            Text("Add")
                         }
                     },
                     dismissButton = {
                         TextButton(
-                            onClick = {
-                                showDatePicker = false
-                                dueDate = null
-                            }
+                            onClick = { showAttachmentDialog = false }
                         ) {
                             Text("Cancel")
                         }
                     }
-                ) {
-                    DatePicker(
-                        state = datePickerState,
-                        showModeToggle = true
-                    )
-                }
-            }
-
-            if (showError) {
-                Text(
-                    text = errorMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
                 )
             }
 
             Button(
                 onClick = {
-                    if (title.isBlank()) {
+                    if (submissionText.isBlank()) {
                         showError = true
-                        errorMessage = "Title cannot be empty"
+                        errorMessage = "Please enter submission text"
                         return@Button
                     }
 
-                    val task = Task(
-                        id = "",
-                        title = title,
-                        description = description,
-                        projectId = projectId,
-                        status = TaskStatus.TODO,
-                        priority = priority,
-                        assigneeIds = emptyList(),
-                        dueDate = dueDate?.let { Timestamp(it.time / 1000, 0) },
-                        createdAt = Timestamp.now(),
-                        updatedAt = Timestamp.now(),
-                        subTasks = emptyList(),
-                        comments = emptyList(),
-                        attachments = emptyList(),
-                        createdBy = ""
-                    )
-
-                    viewModel.saveTask(task)
+                    isLoading = true
+                    task?.let { currentTask ->
+                        val updatedTask = currentTask.copy(
+                            submissionText = submissionText,
+                            attachments = attachments,
+                            status = TaskStatus.IN_REVIEW,
+                            updatedAt = Timestamp.now()
+                        )
+                        viewModel.updateTask(updatedTask)
+                        onNavigateBack()
+                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading
+                enabled = !isLoading && task != null
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
@@ -199,6 +213,14 @@ fun SubmitTaskScreen(
                 } else {
                     Text("Submit Task")
                 }
+            }
+
+            if (showError) {
+                Text(
+                    text = errorMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
             }
         }
     }

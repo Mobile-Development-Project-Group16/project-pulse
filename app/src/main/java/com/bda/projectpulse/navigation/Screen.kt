@@ -19,8 +19,8 @@ sealed class Screen(val route: String) {
     object CreateTask : Screen("create_task/{projectId}") {
         fun createRoute(projectId: String) = "create_task/$projectId"
     }
-    object SubmitTask : Screen("submit_task/{projectId}") {
-        fun createRoute(projectId: String) = "submit_task/$projectId"
+    object SubmitTask : Screen("submit_task/{taskId}") {
+        fun createRoute(taskId: String) = "submit_task/$taskId"
     }
     object EditTask : Screen("edit_task/{projectId}/{taskId}") {
         fun createRoute(projectId: String, taskId: String) = "edit_task/$projectId/$taskId"
