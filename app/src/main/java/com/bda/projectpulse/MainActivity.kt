@@ -14,6 +14,8 @@ import com.bda.projectpulse.navigation.Screen
 import com.bda.projectpulse.ui.theme.ProjectPulseTheme
 import dagger.hilt.android.AndroidEntryPoint
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.LaunchedEffect
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -27,13 +29,54 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val navController = rememberNavController()
                     val auth = FirebaseAuth.getInstance()
+                    
+                    // Check if we should navigate somewhere specific
+                    val navigationTarget = intent.getStringExtra("navigation")
+                    val taskId = intent.getStringExtra("taskId")
+                    val projectId = intent.getStringExtra("projectId")
+                    val notificationType = intent.getStringExtra("type")
+                    
+                    // Create a key object that combines all the values
+                    val navigationKey = listOf(auth.currentUser, navigationTarget, taskId, projectId, notificationType)
+                    
+                    // Set up navigation based on auth state and intent
+                    LaunchedEffect(navigationKey) {
+                        if (auth.currentUser != null) {
+                            // User is authenticated
+                            when (navigationTarget) {
+                                "notifications" -> {
+                                    // Navigate to notifications screen
+                                    navController.navigate(Screen.Notifications.route) {
+                                        popUpTo(Screen.Projects.route)
+                                    }
+                                    
+                                    // Then, if we have a taskId, navigate to task details
+                                    if (!taskId.isNullOrEmpty()) {
+                                        navController.navigate(Screen.TaskDetails.createRoute(taskId))
+                                    }
+                                    
+                                    // Or if we have a projectId, navigate to project chat
+                                    else if (!projectId.isNullOrEmpty() && notificationType == "CHAT_MESSAGE") {
+                                        navController.navigate(Screen.ProjectChat.createRoute(projectId))
+                                    }
+                                }
+                                else -> {
+                                    navController.navigate(Screen.Projects.route) {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                }
+                            }
+                        } else {
+                            // User is not authenticated, go to auth screen
+                            navController.navigate(Screen.Auth.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    }
+                    
                     AppNavigation(
                         navController = navController,
-                        startDestination = if (auth.currentUser != null) {
-                            Screen.Projects.route
-                        } else {
-                            Screen.Auth.route
-                        }
+                        startDestination = Screen.Auth.route
                     )
                 }
             }

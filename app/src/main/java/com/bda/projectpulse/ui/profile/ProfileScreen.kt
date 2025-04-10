@@ -9,9 +9,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bda.projectpulse.models.UserRole
 import com.bda.projectpulse.navigation.Screen
 import androidx.navigation.NavHostController
+import com.bda.projectpulse.ui.components.MainBottomBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,9 +23,10 @@ fun ProfileScreen(
     navController: NavHostController,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
-    val currentUser by viewModel.currentUser.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val error by viewModel.error.collectAsState()
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val error by viewModel.error.collectAsStateWithLifecycle()
+    val unreadNotificationCount by viewModel.unreadNotificationsCount.collectAsStateWithLifecycle(initialValue = 0)
     
     var showChangePasswordDialog by remember { mutableStateOf(false) }
     var showEditProfileDialog by remember { mutableStateOf(false) }
@@ -31,6 +34,10 @@ fun ProfileScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var newDisplayName by remember { mutableStateOf(currentUser?.displayName ?: "") }
     var passwordError by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadUnreadNotificationsCount()
+    }
 
     Scaffold(
         topBar = {
@@ -41,6 +48,12 @@ fun ProfileScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
+            )
+        },
+        bottomBar = {
+            MainBottomBar(
+                navController = navController,
+                unreadNotificationCount = unreadNotificationCount
             )
         }
     ) { padding ->

@@ -4,29 +4,35 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bda.projectpulse.models.User
 import com.bda.projectpulse.repositories.UserRepository
+import com.bda.projectpulse.repositories.NotificationRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val notificationRepository: NotificationRepository
 ) : ViewModel() {
 
     private val _currentUser = MutableStateFlow<User?>(null)
-    val currentUser = _currentUser.asStateFlow()
+    val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
-    val isLoading = _isLoading.asStateFlow()
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
-    val error = _error.asStateFlow()
+    val error: StateFlow<String?> = _error.asStateFlow()
+
+    private val _unreadNotificationsCount = MutableStateFlow<Int>(0)
+    val unreadNotificationsCount = _unreadNotificationsCount.asStateFlow()
 
     init {
         loadCurrentUser()
@@ -42,6 +48,19 @@ class ProfileViewModel @Inject constructor(
                 _error.value = e.message
             } finally {
                 _isLoading.value = false
+            }
+        }
+    }
+
+    fun loadUnreadNotificationsCount() {
+        viewModelScope.launch {
+            try {
+                val currentUserId = userRepository.getCurrentUser()?.uid ?: return@launch
+                notificationRepository.getUnreadNotificationCount(currentUserId).collect { count ->
+                    _unreadNotificationsCount.value = count
+                }
+            } catch (e: Exception) {
+                println("Error loading unread notifications count: ${e.message}")
             }
         }
     }

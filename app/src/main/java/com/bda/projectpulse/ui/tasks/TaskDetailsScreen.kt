@@ -171,7 +171,7 @@ fun TaskDetailsScreen(
                         }
 
                         IconButton(onClick = { onEditTask(currentTask) }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit Task")
+                        Icon(Icons.Default.Edit, contentDescription = "Edit Task")
                         }
                     }
                 }
@@ -193,9 +193,9 @@ fun TaskDetailsScreen(
                     ) {
                         TaskDetails(
                             task = currentTask,
-                            assignees = assignees,
-                            viewModel = viewModel
-                        )
+                    assignees = assignees,
+                    viewModel = viewModel
+                )
                     }
 
                     // Submission Details Card (if available)
@@ -358,72 +358,72 @@ private fun TaskDetails(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-    ) {
-        // Title and priority
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = task.title,
+                ) {
+                    // Title and priority
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = task.title,
                 style = MaterialTheme.typography.titleLarge
-            )
-            
-            // Priority badge with dropdown menu
-            Box {
-                TaskPriorityBadge(
-                    priority = task.priority,
-                    modifier = Modifier.clickable { showPriorityMenu = true }
-                )
-                
-                DropdownMenu(
-                    expanded = showPriorityMenu,
-                    onDismissRequest = { showPriorityMenu = false }
-                ) {
-                    TaskPriority.values().forEach { priority ->
-                        DropdownMenuItem(
-                            text = { Text(priority.name) },
-                            onClick = {
-                                viewModel.updateTaskPriority(priority)
-                                showPriorityMenu = false
-                            }
                         )
+                        
+                        // Priority badge with dropdown menu
+                        Box {
+                            TaskPriorityBadge(
+                                priority = task.priority,
+                                modifier = Modifier.clickable { showPriorityMenu = true }
+                            )
+                            
+                            DropdownMenu(
+                                expanded = showPriorityMenu,
+                                onDismissRequest = { showPriorityMenu = false }
+                            ) {
+                                TaskPriority.values().forEach { priority ->
+                                    DropdownMenuItem(
+                                        text = { Text(priority.name) },
+                                        onClick = {
+                                viewModel.updateTaskPriority(priority)
+                                            showPriorityMenu = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
-                }
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        // Status with dropdown menu
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Status: ",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Box {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .clickable { showStatusMenu = true }
-                        .padding(vertical = 4.dp)
-                ) {
-                    TaskStatusChip(status = task.status)
-                    Icon(
-                        imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                }
-                
-                DropdownMenu(
-                    expanded = showStatusMenu,
-                    onDismissRequest = { showStatusMenu = false }
-                ) {
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Status with dropdown menu
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Status: ",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Box {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .clickable { showStatusMenu = true }
+                                    .padding(vertical = 4.dp)
+                            ) {
+                                TaskStatusChip(status = task.status)
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(start = 4.dp)
+                                )
+                            }
+                            
+                            DropdownMenu(
+                                expanded = showStatusMenu,
+                                onDismissRequest = { showStatusMenu = false }
+                            ) {
                     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
                     val allowedStatuses = when {
                         // Admin and managers can change to any status
@@ -454,43 +454,43 @@ private fun TaskDetails(
                         )
                     } else {
                         allowedStatuses.forEach { status ->
-                            DropdownMenuItem(
-                                text = { Text(status.name.replace("_", " ")) },
-                                onClick = {
+                                    DropdownMenuItem(
+                                        text = { Text(status.name.replace("_", " ")) },
+                                        onClick = {
                                     viewModel.updateTaskStatus(status)
-                                    showStatusMenu = false
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = when (status) {
-                                            TaskStatus.TODO -> Icons.Default.Assignment
-                                            TaskStatus.IN_PROGRESS -> Icons.Default.DirectionsRun
-                                            TaskStatus.IN_REVIEW -> Icons.Default.RateReview
+                                            showStatusMenu = false
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = when (status) {
+                                                    TaskStatus.TODO -> Icons.Default.Assignment
+                                                    TaskStatus.IN_PROGRESS -> Icons.Default.DirectionsRun
+                                                    TaskStatus.IN_REVIEW -> Icons.Default.RateReview
                                             TaskStatus.APPROVED -> Icons.Default.CheckCircle
                                             TaskStatus.REJECTED -> Icons.Default.Cancel
-                                        },
-                                        contentDescription = null
+                                                },
+                                                contentDescription = null
+                                            )
+                                        }
                                     )
+                        }
                                 }
-                            )
+                            }
                         }
                     }
-                }
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        // Description
-        Text(
-            text = "Description",
-            style = MaterialTheme.typography.titleMedium
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = task.description,
-            style = MaterialTheme.typography.bodyLarge
-        )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Description
+                    Text(
+                        text = "Description",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = task.description,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
         
         // Show submission text if available and task is in review
         if (task.status == TaskStatus.IN_REVIEW && task.submissionText.isNotBlank()) {
@@ -505,124 +505,124 @@ private fun TaskDetails(
                 style = MaterialTheme.typography.bodyLarge
             )
         }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        // Dates
-        Text(
-            text = "Timeline",
-            style = MaterialTheme.typography.titleMedium
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        
-        val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-        
-        // Created/Updated dates
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.Default.DateRange, 
-                contentDescription = null,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                "Created: ${dateFormat.format(task.createdAt.toDate())}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(4.dp))
-        
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.Default.Update, 
-                contentDescription = null,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                "Updated: ${dateFormat.format(task.updatedAt.toDate())}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-        
-        // Due date
-        task.dueDate?.let { dueDate ->
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.CalendarToday, 
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    "Due: ${dateFormat.format(dueDate.toDate())}",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        // Assignment
-        Text(
-            text = "Assignees",
-            style = MaterialTheme.typography.titleMedium
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        
-        if (assignees.isEmpty()) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.Person, 
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    "No assignees",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        } else {
-            Column {
-                assignees.forEach { user ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    ) {
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Dates
+                    Text(
+                        text = "Timeline",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+                    
+                    // Created/Updated dates
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            Icons.Default.Person, 
+                            Icons.Default.DateRange, 
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Column {
+                        Text(
+                            "Created: ${dateFormat.format(task.createdAt.toDate())}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.Update, 
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "Updated: ${dateFormat.format(task.updatedAt.toDate())}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    
+                    // Due date
+                    task.dueDate?.let { dueDate ->
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.CalendarToday, 
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = user.displayName,
+                                "Due: ${dateFormat.format(dueDate.toDate())}",
                                 style = MaterialTheme.typography.bodyMedium
                             )
-                            if (user.email.isNotEmpty()) {
-                                Text(
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Assignment
+                    Text(
+                        text = "Assignees",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    if (assignees.isEmpty()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.Person, 
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                "No assignees",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    } else {
+                        Column {
+                            assignees.forEach { user ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Person, 
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column {
+                                        Text(
+                                text = user.displayName,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        if (user.email.isNotEmpty()) {
+                                            Text(
                                     text = user.email,
-                                    style = MaterialTheme.typography.bodySmall
-                                )
+                                                style = MaterialTheme.typography.bodySmall
+                                            )
                             }
                         }
                     }
                 }
             }
         }
-
+                    
         // Subtasks if any
         if (task.subTasks.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Subtasks",
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Subtasks",
                 style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+                )
+                Spacer(modifier = Modifier.height(8.dp))
             
             task.subTasks.forEach { subtask ->
                 Card(
@@ -652,12 +652,12 @@ private fun TaskDetails(
         
         // Comments if any
         if (task.comments.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Comments",
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Comments",
                 style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+                )
+                Spacer(modifier = Modifier.height(8.dp))
             
             task.comments.forEach { comment ->
                 Card(

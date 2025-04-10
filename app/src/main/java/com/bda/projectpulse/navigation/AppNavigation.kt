@@ -24,6 +24,8 @@ import com.bda.projectpulse.ui.admin.AdminSettingsViewModel
 import com.bda.projectpulse.ui.ai.AIChatScreen
 import com.bda.projectpulse.ui.chat.ProjectChatScreen
 import com.bda.projectpulse.ui.team.TeamManagementScreen
+import com.bda.projectpulse.ui.notifications.NotificationScreen
+import com.bda.projectpulse.ui.notifications.NotificationViewModel
 
 @Composable
 fun AppNavigation(
@@ -62,7 +64,8 @@ fun AppNavigation(
                 },
                 onNavigateToAdminSettings = {
                     navController.navigate(Screen.AdminSettings.route)
-                }
+                },
+                navController = navController
             )
         }
 
@@ -279,6 +282,21 @@ fun AppNavigation(
                 onNavigateBack = { navController.navigateUp() },
                 navController = navController,
                 viewModel = viewModel
+            )
+        }
+
+        composable(route = Screen.Notifications.route) {
+            val viewModel: NotificationViewModel = hiltViewModel()
+            NotificationScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToTaskDetails = { taskId ->
+                    navController.navigate(Screen.TaskDetails.createRoute(taskId))
+                },
+                onNavigateToProjectChat = { projectId ->
+                    navController.navigate(Screen.ProjectChat.createRoute(projectId))
+                },
+                viewModel = viewModel,
+                navController = navController
             )
         }
     }

@@ -21,8 +21,11 @@ import com.bda.projectpulse.models.Project
 import com.bda.projectpulse.models.UserRole
 import com.bda.projectpulse.ui.common.ErrorMessage
 import com.bda.projectpulse.ui.common.StatusChip
+import com.bda.projectpulse.ui.components.MainBottomBar
 import java.text.SimpleDateFormat
 import java.util.Locale
+import androidx.navigation.NavHostController
+import com.bda.projectpulse.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,18 +35,21 @@ fun ProjectListScreen(
     onNavigateToEditProject: (String) -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToAdminSettings: () -> Unit,
+    navController: NavHostController,
     viewModel: ProjectViewModel = hiltViewModel()
 ) {
     val projects by viewModel.projects.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val unreadNotificationCount by viewModel.unreadNotificationsCount.collectAsStateWithLifecycle(initialValue = 0)
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var projectToDelete by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.loadProjects()
         viewModel.loadCurrentUser()
+        viewModel.loadUnreadNotificationsCount()
     }
     
     // Check if user can create projects (only ADMIN and MANAGER)
@@ -100,11 +106,14 @@ fun ProjectListScreen(
                         )
                     }
                     
-                    IconButton(onClick = onNavigateToProfile) {
-                        Icon(
-                            Icons.Default.AccountCircle,
-                            contentDescription = "Profile"
-                        )
+                    // Admin settings button (only shown for admin users)
+                    if (currentUser?.role == UserRole.ADMIN) {
+                        IconButton(onClick = onNavigateToAdminSettings) {
+                            Icon(
+                                Icons.Default.AccountCircle,
+                                contentDescription = "Admin Settings"
+                            )
+                        }
                     }
                 }
             )
@@ -118,6 +127,12 @@ fun ProjectListScreen(
                     Icon(Icons.Default.Add, contentDescription = "Create Project")
                 }
             }
+        },
+        bottomBar = {
+            MainBottomBar(
+                navController = navController,
+                unreadNotificationCount = unreadNotificationCount
+            )
         }
     ) { padding ->
         if (isLoading && projects.isEmpty()) {
@@ -164,7 +179,7 @@ fun ProjectListScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp),
+                        .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     item {

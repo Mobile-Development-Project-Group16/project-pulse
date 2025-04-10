@@ -4,6 +4,9 @@ import android.net.Uri
 import com.bda.projectpulse.models.Attachment
 import com.bda.projectpulse.models.AttachmentType
 import com.bda.projectpulse.models.ChatMessage
+import com.bda.projectpulse.models.Notification
+import com.bda.projectpulse.models.NotificationType
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
@@ -18,7 +21,8 @@ import javax.inject.Singleton
 @Singleton
 class ChatRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val storage: FirebaseStorage
+    private val storage: FirebaseStorage,
+    private val notificationRepository: NotificationRepository
 ) {
     fun getProjectMessages(projectId: String): Flow<List<ChatMessage>> = callbackFlow {
         val messagesRef = firestore.collection("projects")
@@ -89,6 +93,53 @@ class ChatRepository @Inject constructor(
             .collection("messages")
             .add(message)
             .await()
+            
+        // Create notifications for all project members
+        createChatNotifications(projectId, senderId, senderName, text)
+    }
+    
+    private suspend fun createChatNotifications(
+        projectId: String,
+        senderId: String,
+        senderName: String,
+        messageText: String
+    ) {
+        try {
+            // Get project info to get the project name
+            val project = firestore.collection("projects")
+                .document(projectId)
+                .get()
+                .await()
+            
+            val projectName = project.getString("name") ?: "Project"
+            
+            // Get all team members for this project to notify them
+            val teamMembers = project.get("teamMembers") as? List<String> ?: emptyList()
+            
+            // Create and send notification to each team member except the sender
+            teamMembers.forEach { memberId ->
+                if (memberId != senderId) {
+                    val notification = Notification(
+                        id = "",
+                        type = NotificationType.CHAT_MESSAGE,
+                        title = "New message in $projectName",
+                        message = "$senderName: ${if (messageText.length > 50) messageText.substring(0, 47) + "..." else messageText}",
+                        recipientId = memberId,
+                        senderId = senderId,
+                        timestamp = Timestamp.now(),
+                        read = false,
+                        data = mapOf(
+                            "projectId" to projectId
+                        )
+                    )
+                    
+                    notificationRepository.createNotification(notification)
+                }
+            }
+        } catch (e: Exception) {
+            // Log error but don't fail the message send operation
+            println("Error creating chat notifications: ${e.message}")
+        }
     }
 
     private suspend fun uploadFile(projectId: String, uri: Uri): Map<String, Any> {

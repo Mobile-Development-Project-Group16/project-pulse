@@ -7,6 +7,7 @@ import com.bda.projectpulse.models.*
 import com.bda.projectpulse.repositories.ProjectRepository
 import com.bda.projectpulse.repositories.TaskRepository
 import com.bda.projectpulse.repositories.UserRepository
+import com.bda.projectpulse.repositories.NotificationRepository
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,7 +21,8 @@ import kotlinx.coroutines.supervisorScope
 class ProjectViewModel @Inject constructor(
     private val projectRepository: ProjectRepository,
     private val taskRepository: TaskRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val notificationRepository: NotificationRepository
 ) : ViewModel() {
 
     private val _projects = MutableStateFlow<List<Project>>(emptyList())
@@ -37,6 +39,9 @@ class ProjectViewModel @Inject constructor(
 
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser = _currentUser.asStateFlow()
+
+    private val _unreadNotificationsCount = MutableStateFlow<Int>(0)
+    val unreadNotificationsCount = _unreadNotificationsCount.asStateFlow()
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
@@ -59,6 +64,7 @@ class ProjectViewModel @Inject constructor(
                 loadProjects()
                 loadUsers()
                 loadCurrentUser()
+                loadUnreadNotificationsCount()
             }
         }
     }
@@ -378,6 +384,19 @@ class ProjectViewModel @Inject constructor(
                     }
             } catch (e: Exception) {
                 _error.value = e.message ?: "Failed to unassign user from tasks"
+            }
+        }
+    }
+
+    fun loadUnreadNotificationsCount() {
+        viewModelScope.launch {
+            try {
+                val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
+                notificationRepository.getUnreadNotificationCount(currentUserId).collect { count ->
+                    _unreadNotificationsCount.value = count
+                }
+            } catch (e: Exception) {
+                println("Error loading unread notifications count: ${e.message}")
             }
         }
     }

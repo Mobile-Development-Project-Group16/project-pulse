@@ -1,5 +1,6 @@
 package com.bda.projectpulse.repositories
 
+import android.util.Log
 import com.bda.projectpulse.data.source.TaskDataSource
 import com.bda.projectpulse.models.*
 import com.google.firebase.Timestamp
@@ -13,32 +14,119 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.bda.projectpulse.models.Notification
+import com.bda.projectpulse.models.NotificationType
+import com.bda.projectpulse.repositories.NotificationRepository
+import com.google.firebase.auth.FirebaseAuth
 
 @Singleton
 class TaskRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val taskDataSource: TaskDataSource
+    private val taskDataSource: TaskDataSource,
+    private val notificationRepository: NotificationRepository
 ) {
     private val tasksCollection = firestore.collection("tasks")
     private val usersCollection = firestore.collection("users")
+    private val TAG = "TaskRepository"
 
     suspend fun getTask(taskId: String): Task {
         return taskDataSource.getTaskById(taskId).first()
     }
 
     suspend fun createTask(task: Task): Task {
-        return taskDataSource.createTask(task)
+        Log.d(TAG, "Creating task: ${task.title}")
+        val createdTask = taskDataSource.createTask(task)
+        
+        // Create notifications for assignees
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null && task.assigneeIds.isNotEmpty()) {
+            Log.d(TAG, "Creating notifications for ${task.assigneeIds.size} assignees")
+            
+            // Get creator name for the notification message
+            val creator = usersCollection.document(currentUser.uid).get().await()
+            val creatorName = creator.getString("displayName") ?: "A team member"
+            
+            // Send notifications to all assignees
+            task.assigneeIds.forEach { assigneeId ->
+                if (assigneeId != currentUser.uid) { // Don't notify the creator if they assigned themselves
+                    Log.d(TAG, "Creating task assignment notification for user: $assigneeId")
+                    val notification = Notification(
+                        id = "",
+                        type = NotificationType.TASK_ASSIGNED,
+                        title = "New Task Assigned",
+                        message = "$creatorName assigned you to: ${task.title}",
+                        recipientId = assigneeId,
+                        senderId = currentUser.uid,
+                        timestamp = Timestamp.now(),
+                        read = false,
+                        data = mapOf(
+                            "taskId" to createdTask.id,
+                            "projectId" to task.projectId
+                        )
+                    )
+                    notificationRepository.createNotification(notification)
+                    Log.d(TAG, "Notification created for task assignment")
+                }
+            }
+        } else {
+            Log.d(TAG, "No notifications created: currentUser=${currentUser != null}, assigneeCount=${task.assigneeIds.size}")
+        }
+        
+        return createdTask
     }
 
     suspend fun updateTask(task: Task) {
+        Log.d(TAG, "Updating task: ${task.title} (${task.id})")
         taskDataSource.updateTask(task)
+        
+        // Create notification for task updates if there are assignees
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null && task.assigneeIds.isNotEmpty()) {
+            Log.d(TAG, "Creating notifications for task update, assignees: ${task.assigneeIds.size}")
+            
+            // Get updater name for the notification message
+            val updater = usersCollection.document(currentUser.uid).get().await()
+            val updaterName = updater.getString("displayName") ?: "A team member"
+            
+            // Send notifications to all assignees except the updater
+            task.assigneeIds.forEach { assigneeId ->
+                if (assigneeId != currentUser.uid) {
+                    Log.d(TAG, "Creating task update notification for user: $assigneeId")
+                    val notification = Notification(
+                        id = "",
+                        type = NotificationType.TASK_UPDATED,
+                        title = "Task Updated",
+                        message = "$updaterName updated task: ${task.title}",
+                        recipientId = assigneeId,
+                        senderId = currentUser.uid,
+                        timestamp = Timestamp.now(),
+                        read = false,
+                        data = mapOf(
+                            "taskId" to task.id,
+                            "projectId" to task.projectId
+                        )
+                    )
+                    notificationRepository.createNotification(notification)
+                    Log.d(TAG, "Notification created for task update")
+                }
+            }
+        } else {
+            Log.d(TAG, "No notifications created for update: currentUser=${currentUser != null}, assigneeCount=${task.assigneeIds.size}")
+        }
     }
 
     suspend fun updateTaskStatus(taskId: String, status: TaskStatus): Result<Unit> {
         return try {
+            Log.d(TAG, "Updating task status: $taskId to $status")
             if (taskId.isBlank()) {
                 return Result.failure(IllegalArgumentException("Task ID cannot be empty"))
             }
+            
+            // Get the task to include its details in the notification
+            val task = tasksCollection.document(taskId).get().await().toObject(Task::class.java)
+                ?: return Result.failure(IllegalArgumentException("Task not found"))
+            
+            Log.d(TAG, "Found task for status update: ${task.title} (${task.id})")
             
             tasksCollection.document(taskId)
                 .update(
@@ -48,8 +136,106 @@ class TaskRepository @Inject constructor(
                     )
                 )
                 .await()
+                
+            // Create notification for relevant users based on status
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            if (currentUser != null) {
+                Log.d(TAG, "Creating notifications for task status change to $status")
+                
+                // Get updater name for the notification message
+                val updater = usersCollection.document(currentUser.uid).get().await()
+                val updaterName = updater.getString("displayName") ?: "A team member"
+                
+                val notificationType = when(status) {
+                    TaskStatus.APPROVED -> NotificationType.TASK_APPROVED
+                    TaskStatus.IN_REVIEW -> NotificationType.TASK_UPDATED
+                    TaskStatus.REJECTED -> NotificationType.TASK_REJECTED
+                    else -> NotificationType.TASK_UPDATED
+                }
+                
+                // Create notification title based on status
+                val notificationTitle = when(status) {
+                    TaskStatus.APPROVED -> "Task Approved"
+                    TaskStatus.IN_REVIEW -> "Task Ready for Review"
+                    TaskStatus.REJECTED -> "Task Rejected"
+                    TaskStatus.TODO -> "Task Moved to To-Do"
+                    TaskStatus.IN_PROGRESS -> "Task In Progress"
+                    else -> "Task Status Updated"
+                }
+                
+                // Create notification message based on status
+                val notificationMessage = when(status) {
+                    TaskStatus.APPROVED -> "$updaterName approved task '${task.title}'"
+                    TaskStatus.IN_REVIEW -> "$updaterName marked task '${task.title}' as ready for review"
+                    TaskStatus.REJECTED -> "$updaterName rejected task '${task.title}'"
+                    TaskStatus.TODO -> "$updaterName moved task '${task.title}' to To-Do"
+                    TaskStatus.IN_PROGRESS -> "$updaterName started working on task '${task.title}'"
+                    else -> "$updaterName updated the status of task '${task.title}' to ${status.name}"
+                }
+                
+                // Determine recipients for notifications
+                val notificationRecipients = mutableSetOf<String>()
+                
+                // Always notify the task creator if they're not the one updating
+                if (task.createdBy != currentUser.uid) {
+                    notificationRecipients.add(task.createdBy)
+                    Log.d(TAG, "Adding task creator ${task.createdBy} to notification recipients")
+                }
+                
+                // Get the project to find out who's the project owner
+                if (status == TaskStatus.IN_REVIEW) {
+                    try {
+                        // Get the project to find the project owner
+                        val projectDoc = firestore.collection("projects").document(task.projectId).get().await()
+                        val project = projectDoc.data
+                        val projectOwnerId = project?.get("ownerId") as? String
+                        
+                        // Add project owner to recipients if they're not already included
+                        if (projectOwnerId != null && projectOwnerId != currentUser.uid && !notificationRecipients.contains(projectOwnerId)) {
+                            notificationRecipients.add(projectOwnerId)
+                            Log.d(TAG, "Adding project owner $projectOwnerId to notification recipients for review")
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error getting project details", e)
+                    }
+                }
+                
+                // For all status types, notify other assignees
+                task.assigneeIds.forEach { assigneeId ->
+                    if (assigneeId != currentUser.uid) {
+                        notificationRecipients.add(assigneeId)
+                    }
+                }
+                
+                Log.d(TAG, "Will send status change notifications to ${notificationRecipients.size} recipients")
+                
+                // Send notifications to all recipients
+                notificationRecipients.forEach { recipientId ->
+                    Log.d(TAG, "Creating task status notification for user: $recipientId, status: $status")
+                    val notification = Notification(
+                        id = "",
+                        type = notificationType,
+                        title = notificationTitle,
+                        message = notificationMessage,
+                        recipientId = recipientId,
+                        senderId = currentUser.uid,
+                        timestamp = Timestamp.now(),
+                        read = false,
+                        data = mapOf(
+                            "taskId" to taskId,
+                            "projectId" to task.projectId
+                        )
+                    )
+                    notificationRepository.createNotification(notification)
+                    Log.d(TAG, "Notification created for task status change")
+                }
+            } else {
+                Log.d(TAG, "No notifications created for status update: currentUser is null")
+            }
+            
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e(TAG, "Error updating task status", e)
             Result.failure(e)
         }
     }
@@ -155,6 +341,26 @@ class TaskRepository @Inject constructor(
                 tasksCollection.document(taskId)
                     .update("assigneeIds", updatedAssignees, "updatedAt", Timestamp.now())
                     .await()
+                
+                // Create notification for the assigned user
+                val currentUser = FirebaseAuth.getInstance().currentUser
+                if (currentUser != null) {
+                    val notification = Notification(
+                        id = "",
+                        type = NotificationType.TASK_ASSIGNED,
+                        title = "New Task Assigned",
+                        message = "You have been assigned to task: ${task.title}",
+                        recipientId = userId,
+                        senderId = currentUser.uid,
+                        timestamp = Timestamp.now(),
+                        read = false,
+                        data = mapOf(
+                            "taskId" to taskId,
+                            "projectId" to task.projectId
+                        )
+                    )
+                    notificationRepository.createNotification(notification)
+                }
             }
             Result.success(Unit)
         } catch (e: Exception) {
