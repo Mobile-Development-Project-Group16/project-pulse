@@ -10,5 +10,6 @@ data class User(
     val photoUrl: String? = null,
     val role: UserRole = UserRole.USER,
     val createdAt: Timestamp? = null,
-    val updatedAt: Timestamp? = null
+    val updatedAt: Timestamp? = null,
+    val fcmToken: String? = null
 )

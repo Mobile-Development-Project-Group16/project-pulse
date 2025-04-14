@@ -33,6 +33,7 @@ fun TaskListScreen(
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
 
     LaunchedEffect(projectId) {
+        println("Loading tasks for projectId: $projectId")
         if (projectId != null) {
             viewModel.loadProjectTasks(projectId)
         } else {
@@ -43,7 +44,7 @@ fun TaskListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tasks") },
+                title = { Text(if (projectId != null) "Project Tasks" else "All Tasks") },
                 navigationIcon = {
                     if (projectId != null) {
                         IconButton(onClick = onNavigateBack) {
@@ -57,7 +58,13 @@ fun TaskListScreen(
             if (projectId == null) {
                 BottomNavigationBar(
                     currentRoute = Screen.TaskList.route,
-                    onNavigate = { route -> navController.navigate(route) }
+                    onNavigate = { route -> 
+                        if (route != Screen.TaskList.route) {
+                            navController.navigate(route) {
+                                popUpTo(Screen.TaskList.route) { inclusive = true }
+                            }
+                        }
+                    }
                 )
             }
         },
@@ -75,6 +82,23 @@ fun TaskListScreen(
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
+            }
+        } else if (uiState.error != null) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = uiState.error ?: "Unknown error",
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        } else if (uiState.tasks.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No tasks found")
             }
         } else {
             LazyColumn(

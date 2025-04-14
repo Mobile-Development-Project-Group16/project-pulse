@@ -18,8 +18,8 @@ sealed class Screen(val route: String) {
         fun createRoute(projectId: String) = "project/$projectId/edit"
     }
     
-    object TaskList : Screen("project/{projectId}/tasks") {
-        fun createRoute(projectId: String) = "project/$projectId/tasks"
+    object TaskList : Screen("tasks?projectId={projectId}") {
+        fun createRoute(projectId: String?) = if (projectId != null) "tasks?projectId=$projectId" else "tasks"
     }
     
     object TaskDetails : Screen("task/{taskId}") {

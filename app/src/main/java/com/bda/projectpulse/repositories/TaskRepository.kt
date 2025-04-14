@@ -296,13 +296,35 @@ class TaskRepository @Inject constructor(
         }
     }
 
-    fun getTaskById(taskId: String): Flow<Task?> = flow {
-        try {
-            val snapshot = tasksCollection.document(taskId).get().await()
-            val task = snapshot.toObject(Task::class.java)
-            emit(task?.copy(id = snapshot.id))
-        } catch (e: Exception) {
-            throw e
+    fun getTaskById(taskId: String): Flow<Task?> = callbackFlow {
+        Log.d(TAG, "Setting up task listener for taskId: $taskId")
+        val subscription = tasksCollection.document(taskId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e(TAG, "Error getting task: ${error.message}")
+                    close(error)
+                    return@addSnapshotListener
+                }
+                
+                if (snapshot != null && snapshot.exists()) {
+                    Log.d(TAG, "Received task snapshot for taskId: $taskId")
+                    val task = snapshot.toObject(Task::class.java)
+                    if (task != null) {
+                        Log.d(TAG, "Successfully parsed task: ${task.title}")
+                        trySend(task.copy(id = snapshot.id))
+                    } else {
+                        Log.e(TAG, "Failed to parse task document")
+                        close(Exception("Failed to parse task document"))
+                    }
+                } else {
+                    Log.d(TAG, "Task document does not exist")
+                    trySend(null)
+                }
+            }
+        
+        awaitClose {
+            Log.d(TAG, "Closing task listener for taskId: $taskId")
+            subscription.remove()
         }
     }
 

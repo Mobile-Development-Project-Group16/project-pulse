@@ -21,6 +21,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.supervisorScope
 import javax.inject.Inject
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 
 data class TaskUiState(
     val tasks: List<Task> = emptyList(),
@@ -62,32 +63,110 @@ class TaskViewModel @Inject constructor(
     val uiState: StateFlow<TaskUiState> = _uiState.asStateFlow()
 
     init {
-        loadUsers()
-        loadCurrentUser()
+        println("TaskViewModel initialized")
+        // Load current user first, then load users
+        viewModelScope.launch {
+            try {
+                loadCurrentUser()
+                // Wait a bit to ensure current user is loaded
+                delay(500)
+                loadUsers()
+            } catch (e: Exception) {
+                println("Error in init block: ${e.message}")
+                _error.value = "Initialization error: ${e.message}"
+            }
+        }
     }
 
     fun loadCurrentUser() {
         viewModelScope.launch {
             try {
-                _currentUser.value = userRepository.getCurrentUser()
+                _isLoading.value = true
+                _error.value = null
+                println("Starting to load current user")
+                
+                // Use supervisorScope to prevent cancellation from affecting child coroutines
+                supervisorScope {
+                    try {
+                        // Use withContext to ensure we're on the IO dispatcher
+                        withContext(Dispatchers.IO + NonCancellable) {
+                            val user = userRepository.getCurrentUser()
+                            if (user != null) {
+                                println("Successfully loaded current user: ${user.displayName}")
+                                _currentUser.value = user
+                                _error.value = null
+                            } else {
+                                println("Current user is null")
+                                _error.value = "User not authenticated"
+                            }
+                        }
+                    } catch (e: Exception) {
+                        println("Error in supervisorScope: ${e.message}")
+                        _error.value = "Error loading current user: ${e.message}"
+                    }
+                }
             } catch (e: Exception) {
-                _error.value = e.message
+                println("Unexpected error in loadCurrentUser: ${e.message}")
+                _error.value = "Unexpected error: ${e.message}"
+            } finally {
+                _isLoading.value = false
+                println("Finished loading current user")
             }
         }
     }
 
     fun loadTaskById(taskId: String) {
         viewModelScope.launch {
-            _isLoading.value = true
-            _error.value = null
             try {
-                taskRepository.getTaskById(taskId)
-                    .catch { e -> _error.value = e.message }
-                    .collect { task ->
-                        _selectedTask.value = task
+                _isLoading.value = true
+                _error.value = null
+                println("Starting to load task with ID: $taskId")
+                
+                // Use supervisorScope to prevent cancellation from affecting child coroutines
+                supervisorScope {
+                    try {
+                        // First check if the user is authenticated
+                        val currentUser = userRepository.getCurrentUser()
+                        if (currentUser == null) {
+                            println("Error: User not authenticated")
+                            _error.value = "User not authenticated"
+                            _selectedTask.value = null
+                            return@supervisorScope
+                        }
+                        
+                        // Use withContext to ensure we're on the IO dispatcher
+                        withContext(Dispatchers.IO + NonCancellable) {
+                            taskRepository.getTaskById(taskId)
+                                .catch { e ->
+                                    println("Error loading task: ${e.message}")
+                                    _error.value = "Failed to load task: ${e.message}"
+                                    _selectedTask.value = null
+                                }
+                                .collect { task ->
+                                    if (task != null) {
+                                        println("Successfully loaded task: ${task.title}")
+                                        _selectedTask.value = task
+                                        _error.value = null
+                                    } else {
+                                        println("Task not found with ID: $taskId")
+                                        _error.value = "Task not found"
+                                        _selectedTask.value = null
+                                    }
+                                }
+                        }
+                    } catch (e: Exception) {
+                        println("Error in supervisorScope: ${e.message}")
+                        _error.value = "Error loading task: ${e.message}"
+                        _selectedTask.value = null
                     }
+                }
+            } catch (e: Exception) {
+                println("Unexpected error in loadTaskById: ${e.message}")
+                _error.value = "Unexpected error: ${e.message}"
+                _selectedTask.value = null
             } finally {
                 _isLoading.value = false
+                println("Finished loading task with ID: $taskId")
             }
         }
     }
@@ -134,15 +213,36 @@ class TaskViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                userRepository.getUsers()
-                    .catch { e -> _error.value = e.message }
-                    .collect { userList ->
-                        _users.value = userList
+                _error.value = null
+                println("Starting to load users")
+                
+                // Use supervisorScope to prevent cancellation from affecting child coroutines
+                supervisorScope {
+                    try {
+                        // Use withContext to ensure we're on the IO dispatcher
+                        withContext(Dispatchers.IO + NonCancellable) {
+                            userRepository.getUsers()
+                                .catch { e ->
+                                    println("Error loading users: ${e.message}")
+                                    _error.value = "Failed to load users: ${e.message}"
+                                }
+                                .collect { userList ->
+                                    println("Successfully loaded ${userList.size} users")
+                                    _users.value = userList
+                                    _error.value = null
+                                }
+                        }
+                    } catch (e: Exception) {
+                        println("Error in supervisorScope: ${e.message}")
+                        _error.value = "Error loading users: ${e.message}"
                     }
+                }
             } catch (e: Exception) {
-                _error.value = e.message
+                println("Unexpected error in loadUsers: ${e.message}")
+                _error.value = "Unexpected error: ${e.message}"
             } finally {
                 _isLoading.value = false
+                println("Finished loading users")
             }
         }
     }

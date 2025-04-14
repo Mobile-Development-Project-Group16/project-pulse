@@ -279,28 +279,14 @@ private fun TeamMemberDashboard(
             }
         }
 
-        // Action Buttons
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        // Action Button - Only Projects
+        OutlinedButton(
+            onClick = onProjectsClick,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            OutlinedButton(
-                onClick = onProjectsClick,
-                modifier = Modifier.weight(1f)
-            ) {
-                Icon(Icons.Default.Folder, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text("View Projects")
-            }
-            
-            OutlinedButton(
-                onClick = onTasksClick,
-                modifier = Modifier.weight(1f)
-            ) {
-                Icon(Icons.Default.Assignment, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text("View Tasks")
-            }
+            Icon(Icons.Default.Folder, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text("View Projects")
         }
     }
 }

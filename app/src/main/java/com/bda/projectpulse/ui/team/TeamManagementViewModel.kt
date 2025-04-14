@@ -49,7 +49,9 @@ class TeamManagementViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                _availableUsers.value = userRepository.getAvailableUsers()
+                userRepository.getUsers().collect { users ->
+                    _availableUsers.value = users
+                }
                 _error.value = null
             } catch (e: Exception) {
                 _error.value = e.message ?: "Failed to load available users"

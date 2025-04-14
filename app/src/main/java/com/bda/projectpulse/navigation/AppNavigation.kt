@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.Alignment
+import com.bda.projectpulse.ui.admin.UserManagementScreen
 
 @Composable
 fun AppNavigation(
@@ -132,13 +133,6 @@ fun AppNavigation(
             arguments = listOf(navArgument("projectId") { type = NavType.StringType })
         ) { backStackEntry ->
             val projectId = backStackEntry.arguments?.getString("projectId") ?: return@composable
-            val viewModel: ProjectViewModel = hiltViewModel()
-            val project by viewModel.selectedProject.collectAsStateWithLifecycle()
-            
-            LaunchedEffect(projectId) {
-                viewModel.loadProjectById(projectId)
-            }
-            
             ProjectDetailsScreen(
                 projectId = projectId,
                 onNavigateBack = { navController.navigateUp() },
@@ -181,16 +175,22 @@ fun AppNavigation(
 
         composable(
             route = Screen.TaskList.route,
-            arguments = listOf(navArgument("projectId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("projectId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
         ) { backStackEntry ->
-            val projectId = backStackEntry.arguments?.getString("projectId") ?: return@composable
+            val projectId = backStackEntry.arguments?.getString("projectId")
             TaskListScreen(
                 projectId = projectId,
                 onTaskClick = { taskId ->
                     navController.navigate(Screen.TaskDetails.createRoute(taskId))
                 },
                 onCreateTask = { 
-                    navController.navigate(Screen.CreateTask.createRoute(projectId))
+                    navController.navigate(Screen.CreateTask.createRoute(projectId ?: "global"))
                 },
                 onNavigateBack = { navController.navigateUp() },
                 navController = navController
@@ -396,6 +396,12 @@ fun AppNavigation(
                     navController.navigateUp()
                 },
                 navController = navController
+            )
+        }
+
+        composable(route = Screen.UserManagement.route) {
+            UserManagementScreen(
+                onNavigateBack = { navController.navigateUp() }
             )
         }
     }
