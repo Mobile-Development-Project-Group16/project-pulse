@@ -2,10 +2,12 @@ package com.bda.projectpulse.ui.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.AccountCircle
-import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Dashboard
+import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -30,9 +32,15 @@ fun MainBottomBar(
 ) {
     val items = listOf(
         BottomNavItem(
+            title = "Dashboard",
+            selectedIcon = Icons.Filled.Dashboard,
+            unselectedIcon = Icons.Outlined.Dashboard,
+            route = Screen.Dashboard.route
+        ),
+        BottomNavItem(
             title = "Projects",
-            selectedIcon = Icons.Filled.Home,
-            unselectedIcon = Icons.Outlined.Home,
+            selectedIcon = Icons.Filled.Folder,
+            unselectedIcon = Icons.Outlined.Folder,
             route = Screen.Projects.route
         ),
         BottomNavItem(

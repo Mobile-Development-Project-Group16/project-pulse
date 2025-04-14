@@ -6,7 +6,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -70,26 +69,6 @@ fun ProjectPulseTextField(
 }
 
 @Composable
-fun StatusChip(
-    text: String,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        color = color.copy(alpha = 0.1f),
-        shape = RoundedCornerShape(16.dp),
-        modifier = modifier
-    ) {
-        Text(
-            text = text,
-            color = color,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            style = MaterialTheme.typography.bodySmall
-        )
-    }
-}
-
-@Composable
 fun LoadingIndicator() {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -97,19 +76,6 @@ fun LoadingIndicator() {
     ) {
         CircularProgressIndicator()
     }
-}
-
-@Composable
-fun ErrorMessage(
-    message: String,
-    modifier: Modifier = Modifier
-) {
-    Text(
-        text = message,
-        color = MaterialTheme.colorScheme.error,
-        style = MaterialTheme.typography.bodyMedium,
-        modifier = modifier
-    )
 }
 
 @Composable

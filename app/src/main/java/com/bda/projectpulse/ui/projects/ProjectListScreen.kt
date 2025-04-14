@@ -19,8 +19,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bda.projectpulse.models.Project
 import com.bda.projectpulse.models.UserRole
-import com.bda.projectpulse.ui.common.ErrorMessage
-import com.bda.projectpulse.ui.common.StatusChip
+import com.bda.projectpulse.ui.components.ErrorMessage
+import com.bda.projectpulse.ui.components.StatusChip
 import com.bda.projectpulse.ui.components.MainBottomBar
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -143,7 +143,19 @@ fun ProjectListScreen(
                 CircularProgressIndicator()
             }
         } else if (error != null) {
-            ErrorMessage(error = error!!)
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                ErrorMessage(message = error!!)
+                Button(
+                    onClick = { viewModel.loadProjects() },
+                    modifier = Modifier.padding(top = 16.dp)
+                ) {
+                    Text("Retry")
+                }
+            }
         } else if (projects.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),

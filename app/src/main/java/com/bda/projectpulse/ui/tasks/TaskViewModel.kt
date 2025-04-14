@@ -1,5 +1,6 @@
 package com.bda.projectpulse.ui.tasks
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -248,12 +249,37 @@ class TaskViewModel @Inject constructor(
     fun updateTaskStatus(status: TaskStatus) {
         viewModelScope.launch {
             try {
-                _selectedTask.value?.let { task ->
-                    taskRepository.updateTaskStatus(task.id, status)
-                    loadTaskById(task.id) // Refresh the task
+                _isLoading.value = true
+                _error.value = null
+                
+                val task = _selectedTask.value
+                if (task != null) {
+                    Log.d("TaskViewModel", "Updating task status to $status for task ${task.id}")
+                    
+                    // Use NonCancellable context to ensure completion even if the coroutine is cancelled
+                    withContext(NonCancellable) {
+                        val result = taskRepository.updateTaskStatus(task.id, status)
+                        
+                        if (result.isSuccess) {
+                            Log.d("TaskViewModel", "Successfully updated task status to $status")
+                        } else {
+                            val exception = result.exceptionOrNull()
+                            Log.e("TaskViewModel", "Failed to update task status: ${exception?.message}", exception)
+                            throw exception ?: Exception("Unknown error updating task status")
+                        }
+                        
+                        // Refresh the task
+                        loadTaskById(task.id)
+                    }
+                } else {
+                    Log.e("TaskViewModel", "Cannot update status - no task selected")
+                    _error.value = "No task selected"
                 }
             } catch (e: Exception) {
-                _error.value = e.message
+                Log.e("TaskViewModel", "Error updating task status", e)
+                _error.value = "Failed to update task status: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -380,12 +406,11 @@ class TaskViewModel @Inject constructor(
                     return@launch
                 }
 
-                val updatedTask = task.copy(
-                    status = TaskStatus.IN_REVIEW,
-                    updatedAt = Timestamp.now()
-                )
-                updateTask(updatedTask)
-                _selectedTask.value = updatedTask
+                // Use updateTaskStatus instead of updateTask to trigger notifications
+                taskRepository.updateTaskStatus(task.id, TaskStatus.IN_REVIEW)
+                
+                // Refresh the task to get the latest version
+                loadTaskById(task.id)
             } catch (e: Exception) {
                 _error.value = e.message
             }
@@ -404,12 +429,11 @@ class TaskViewModel @Inject constructor(
                     return@launch
                 }
 
-                val updatedTask = task.copy(
-                    status = TaskStatus.APPROVED,
-                    updatedAt = Timestamp.now()
-                )
-                updateTask(updatedTask)
-                _selectedTask.value = updatedTask
+                // Use updateTaskStatus instead of updateTask to trigger notifications
+                taskRepository.updateTaskStatus(task.id, TaskStatus.APPROVED)
+                
+                // Refresh the task to get the latest version
+                loadTaskById(task.id)
             } catch (e: Exception) {
                 _error.value = e.message
             }
@@ -423,13 +447,19 @@ class TaskViewModel @Inject constructor(
                 _error.value = null
                 
                 val task = _selectedTask.value ?: throw Exception("Task not found")
+                
+                // First update the task status to trigger notifications
+                taskRepository.updateTaskStatus(task.id, TaskStatus.REJECTED)
+                
+                // Then update the rejection comment separately
                 val updatedTask = task.copy(
-                    status = TaskStatus.IN_PROGRESS,
+                    status = TaskStatus.REJECTED,
                     rejectionComment = rejectionComment
                 )
-                
                 taskRepository.updateTask(updatedTask)
-                _selectedTask.value = updatedTask
+                
+                // Refresh the task
+                loadTaskById(task.id)
             } catch (e: Exception) {
                 _error.value = e.message
             } finally {
@@ -445,6 +475,48 @@ class TaskViewModel @Inject constructor(
                 currentUser?.let { user ->
                     task.assigneeIds.contains(user.uid)
                 } ?: false
+            }
+        }
+    }
+
+    fun submitTaskWithSubmission(taskId: String) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                
+                Log.d("TaskViewModel", "Starting combined task submission process for task $taskId")
+                
+                // Use NonCancellable context to ensure completion even if the coroutine is cancelled
+                withContext(NonCancellable) {
+                    // Wait briefly to ensure the task update completes
+                    kotlinx.coroutines.delay(500)
+                    
+                    // Update the task status to IN_REVIEW
+                    Log.d("TaskViewModel", "Changing task status to IN_REVIEW")
+                    val result = taskRepository.updateTaskStatus(taskId, TaskStatus.IN_REVIEW)
+                    
+                    if (result.isSuccess) {
+                        Log.d("TaskViewModel", "Successfully updated task status to IN_REVIEW")
+                    } else {
+                        val exception = result.exceptionOrNull()
+                        Log.e("TaskViewModel", "Failed to update task status: ${exception?.message}", exception)
+                        throw exception ?: Exception("Unknown error updating task status")
+                    }
+                    
+                    // Wait a bit to ensure status change completes and notifications are processed
+                    kotlinx.coroutines.delay(1000)
+                    
+                    // Refresh the task
+                    loadTaskById(taskId)
+                    
+                    Log.d("TaskViewModel", "Task submission completed successfully")
+                }
+            } catch (e: Exception) {
+                Log.e("TaskViewModel", "Error in task submission process", e)
+                _error.value = "Failed to submit task: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }

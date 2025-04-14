@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
                                 "notifications" -> {
                                     // Navigate to notifications screen
                                     navController.navigate(Screen.Notifications.route) {
-                                        popUpTo(Screen.Projects.route)
+                                        popUpTo(Screen.Dashboard.route)
                                     }
                                     
                                     // Then, if we have a taskId, navigate to task details
@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                                 else -> {
-                                    navController.navigate(Screen.Projects.route) {
+                                    navController.navigate(Screen.Dashboard.route) {
                                         popUpTo(0) { inclusive = true }
                                     }
                                 }

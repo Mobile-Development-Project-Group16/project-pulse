@@ -16,9 +16,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bda.projectpulse.models.User
 import com.bda.projectpulse.models.UserRole
-import com.bda.projectpulse.ui.common.AddTeamMemberDialog
-import com.bda.projectpulse.ui.common.ErrorMessage
-import com.bda.projectpulse.ui.common.TeamMemberItem
+import com.bda.projectpulse.ui.components.AddTeamMemberDialog
+import com.bda.projectpulse.ui.components.ErrorMessage
+import com.bda.projectpulse.ui.components.TeamMemberItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

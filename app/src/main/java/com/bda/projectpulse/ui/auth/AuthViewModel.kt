@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import javax.inject.Inject
 
 data class AuthFormState(
@@ -55,13 +56,16 @@ class AuthViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            try {
-                authManager.getCurrentUser()?.let { firebaseUser ->
-                    val user = authManager.getUserData(firebaseUser.uid)
-                    _authState.value = AuthState.Authenticated(user)
+            supervisorScope {
+                try {
+                    authManager.getCurrentUser()?.let { firebaseUser ->
+                        val user = authManager.getUserData(firebaseUser.uid)
+                        _authState.value = AuthState.Authenticated(user)
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error getting user data", e)
+                    _authState.value = AuthState.Error(e.message ?: "Failed to get user data")
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error getting user data", e)
             }
         }
         checkAdminUser()
@@ -69,36 +73,40 @@ class AuthViewModel @Inject constructor(
 
     private fun checkAuthState() {
         viewModelScope.launch {
-            try {
-                val currentUser = authManager.getCurrentUser()
-                if (currentUser != null) {
-                    val user = authManager.getUserData(currentUser.uid)
-                    _authState.value = AuthState.Authenticated(user)
-                } else {
-                    _authState.value = AuthState.Unauthenticated
+            supervisorScope {
+                try {
+                    val currentUser = authManager.getCurrentUser()
+                    if (currentUser != null) {
+                        val user = authManager.getUserData(currentUser.uid)
+                        _authState.value = AuthState.Authenticated(user)
+                    } else {
+                        _authState.value = AuthState.Unauthenticated
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error checking auth state", e)
+                    _authState.value = AuthState.Error(e.message ?: "Failed to get user data")
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error checking auth state", e)
-                _authState.value = AuthState.Error(e.message ?: "Failed to get user data")
             }
         }
     }
 
     private fun checkAdminUser() {
         viewModelScope.launch {
-            try {
-                val hasAdmin = authManager.hasAdminUser()
-                Log.d(TAG, "Checking for admin user. Has admin: $hasAdmin")
-                _availableRoles.value = if (hasAdmin) {
-                    Log.d(TAG, "Admin exists, limiting available roles")
-                    listOf(UserRole.MANAGER, UserRole.USER)
-                } else {
-                    Log.d(TAG, "No admin exists, showing all roles")
-                    UserRole.values().toList()
+            supervisorScope {
+                try {
+                    val hasAdmin = authManager.hasAdminUser()
+                    Log.d(TAG, "Checking for admin user. Has admin: $hasAdmin")
+                    _availableRoles.value = if (hasAdmin) {
+                        Log.d(TAG, "Admin exists, limiting available roles")
+                        listOf(UserRole.MANAGER, UserRole.USER)
+                    } else {
+                        Log.d(TAG, "No admin exists, showing all roles")
+                        UserRole.values().toList()
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error checking for admin user", e)
+                    _availableRoles.value = listOf(UserRole.MANAGER, UserRole.USER)
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error checking for admin user", e)
-                _availableRoles.value = listOf(UserRole.MANAGER, UserRole.USER)
             }
         }
     }
@@ -129,30 +137,36 @@ class AuthViewModel @Inject constructor(
 
     fun login(email: String, password: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
-            try {
-                _isLoading.value = true
-                _error.value = null
-                authRepository.login(email, password)
-                onSuccess()
-            } catch (e: Exception) {
-                _error.value = e.message ?: "Login failed"
-            } finally {
-                _isLoading.value = false
+            supervisorScope {
+                try {
+                    _isLoading.value = true
+                    _error.value = null
+                    authRepository.login(email, password)
+                    checkAuthState()
+                    onSuccess()
+                } catch (e: Exception) {
+                    _error.value = e.message ?: "Login failed"
+                } finally {
+                    _isLoading.value = false
+                }
             }
         }
     }
 
     fun register(email: String, password: String, name: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
-            try {
-                _isLoading.value = true
-                _error.value = null
-                authRepository.register(email, password, name)
-                onSuccess()
-            } catch (e: Exception) {
-                _error.value = e.message ?: "Registration failed"
-            } finally {
-                _isLoading.value = false
+            supervisorScope {
+                try {
+                    _isLoading.value = true
+                    _error.value = null
+                    authRepository.register(email, password, name)
+                    checkAuthState()
+                    onSuccess()
+                } catch (e: Exception) {
+                    _error.value = e.message ?: "Registration failed"
+                } finally {
+                    _isLoading.value = false
+                }
             }
         }
     }

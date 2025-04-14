@@ -14,6 +14,7 @@ import com.bda.projectpulse.models.Project
 import com.bda.projectpulse.models.UserRole
 import java.text.SimpleDateFormat
 import java.util.*
+import com.bda.projectpulse.ui.components.StatusChip
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -130,7 +131,7 @@ fun ProjectCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                StatusChip(status = project.status.name)
+                StatusChip(status = project.status)
                 
                 Text(
                     text = "Team: ${project.teamMembers.size + 1}",

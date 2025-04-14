@@ -1,5 +1,6 @@
 package com.bda.projectpulse.ui.tasks
 
+import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -17,6 +18,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
 import com.bda.projectpulse.R
 import com.bda.projectpulse.models.TaskStatus
 import com.bda.projectpulse.models.Task
@@ -31,6 +33,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 import androidx.navigation.NavHostController
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -192,14 +196,30 @@ fun SubmitTaskScreen(
 
                     isLoading = true
                     task?.let { currentTask ->
+                        val taskId = currentTask.id
+                        android.util.Log.d("SubmitTaskScreen", "Starting task submission for taskId: $taskId")
+                        
+                        // First update task details (submission text, attachments)
                         val updatedTask = currentTask.copy(
                             submissionText = submissionText,
                             attachments = attachments,
-                            status = TaskStatus.IN_REVIEW,
                             updatedAt = Timestamp.now()
                         )
+                        
+                        android.util.Log.d("SubmitTaskScreen", "Updating task with submission text and attachments")
                         viewModel.updateTask(updatedTask)
+                        
+                        // Then update status to trigger notifications
+                        android.util.Log.d("SubmitTaskScreen", "Changing task status to IN_REVIEW")
+                        viewModel.submitTaskWithSubmission(taskId)
+                        
+                        android.util.Log.d("SubmitTaskScreen", "Task submission request sent, navigating back")
                         onNavigateBack()
+                    } ?: run {
+                        android.util.Log.e("SubmitTaskScreen", "Task is null, cannot submit")
+                        showError = true
+                        errorMessage = "Could not load task"
+                        isLoading = false
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),

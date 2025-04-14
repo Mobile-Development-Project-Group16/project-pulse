@@ -26,16 +26,74 @@ import com.bda.projectpulse.ui.chat.ProjectChatScreen
 import com.bda.projectpulse.ui.team.TeamManagementScreen
 import com.bda.projectpulse.ui.notifications.NotificationScreen
 import com.bda.projectpulse.ui.notifications.NotificationViewModel
+import com.bda.projectpulse.ui.dashboard.RoleDashboardScreen
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.Alignment
 
 @Composable
 fun AppNavigation(
     navController: NavHostController,
-    startDestination: String = Screen.Auth.route
+    startDestination: String = "dashboard"
 ) {
-    NavHost(
-        navController = navController,
-        startDestination = startDestination
-    ) {
+    NavHost(navController = navController, startDestination = startDestination) {
+        composable("dashboard") {
+            RoleDashboardScreen(
+                onNavigateToUserManagement = { navController.navigate("user_management") },
+                onNavigateToSettings = { navController.navigate("admin_settings") },
+                onNavigateToProjects = { navController.navigate("projects") },
+                onNavigateToTasks = { navController.navigate("tasks") },
+                navController = navController
+            )
+        }
+        composable("projects") {
+            ProjectListScreen(
+                onNavigateToProjectDetails = { projectId -> navController.navigate("project/$projectId") },
+                onNavigateToCreateProject = { navController.navigate("create_project") },
+                onNavigateToEditProject = { projectId -> navController.navigate("edit_project/$projectId") },
+                onNavigateToProfile = { navController.navigate("profile") },
+                onNavigateToAdminSettings = { navController.navigate("admin_settings") },
+                navController = navController
+            )
+        }
+        composable("tasks") {
+            TaskListScreen(
+                projectId = null,
+                onTaskClick = { taskId -> 
+                    navController.navigate(Screen.TaskDetails.createRoute(taskId))
+                },
+                onCreateTask = { 
+                    navController.navigate(Screen.CreateTask.createRoute("global"))
+                },
+                onNavigateBack = { 
+                    navController.navigateUp()
+                },
+                navController = navController
+            )
+        }
+        composable("team") {
+            val viewModel: ProjectViewModel = hiltViewModel()
+            val project by viewModel.selectedProject.collectAsStateWithLifecycle()
+            
+            TeamManagementScreen(
+                projectId = "global",
+                projectName = "Global Team",
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("notifications") {
+            NotificationScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToTaskDetails = { taskId -> navController.navigate("task/$taskId") },
+                onNavigateToProjectChat = { projectId -> navController.navigate("chat/$projectId") },
+                navController = navController
+            )
+        }
         composable(route = Screen.Auth.route) {
             val viewModel: AuthViewModel = hiltViewModel()
             AuthScreen(
@@ -74,6 +132,13 @@ fun AppNavigation(
             arguments = listOf(navArgument("projectId") { type = NavType.StringType })
         ) { backStackEntry ->
             val projectId = backStackEntry.arguments?.getString("projectId") ?: return@composable
+            val viewModel: ProjectViewModel = hiltViewModel()
+            val project by viewModel.selectedProject.collectAsStateWithLifecycle()
+            
+            LaunchedEffect(projectId) {
+                viewModel.loadProjectById(projectId)
+            }
+            
             ProjectDetailsScreen(
                 projectId = projectId,
                 onNavigateBack = { navController.navigateUp() },
@@ -121,10 +186,13 @@ fun AppNavigation(
             val projectId = backStackEntry.arguments?.getString("projectId") ?: return@composable
             TaskListScreen(
                 projectId = projectId,
-                onNavigateBack = { navController.navigateUp() },
                 onTaskClick = { taskId ->
                     navController.navigate(Screen.TaskDetails.createRoute(taskId))
                 },
+                onCreateTask = { 
+                    navController.navigate(Screen.CreateTask.createRoute(projectId))
+                },
+                onNavigateBack = { navController.navigateUp() },
                 navController = navController
             )
         }
@@ -217,11 +285,17 @@ fun AppNavigation(
                 viewModel.loadProjectById(projectId)
             }
             
-            AIChatScreen(
-                projectId = projectId,
-                projectName = project?.name ?: "Project",
-                onNavigateBack = { navController.navigateUp() }
-            )
+            if (project != null) {
+                AIChatScreen(
+                    projectId = projectId,
+                    projectName = project?.name ?: "Project",
+                    onNavigateBack = { navController.navigateUp() }
+                )
+            } else {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
         }
 
         composable(
@@ -254,10 +328,17 @@ fun AppNavigation(
                 viewModel.loadProjectById(projectId)
             }
             
-            TeamManagementScreen(
-                projectId = projectId,
-                onNavigateBack = { navController.navigateUp() }
-            )
+            if (project != null) {
+                TeamManagementScreen(
+                    projectId = projectId,
+                    projectName = project?.name ?: "Project",
+                    onNavigateBack = { navController.navigateUp() }
+                )
+            } else {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
         }
 
         composable(route = Screen.CreateProject.route) {
@@ -299,5 +380,56 @@ fun AppNavigation(
                 navController = navController
             )
         }
+
+        composable(route = Screen.Dashboard.route) {
+            RoleDashboardScreen(
+                onNavigateToUserManagement = {
+                    navController.navigate(Screen.UserManagement.route)
+                },
+                onNavigateToSettings = {
+                    navController.navigate(Screen.AdminSettings.route)
+                },
+                onNavigateToProjects = {
+                    navController.navigate(Screen.Projects.route)
+                },
+                onNavigateToTasks = {
+                    navController.navigateUp()
+                },
+                navController = navController
+            )
+        }
+    }
+}
+
+@Composable
+fun BottomNavigationBar(
+    currentRoute: String,
+    onNavigate: (String) -> Unit
+) {
+    NavigationBar {
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Dashboard, contentDescription = "Dashboard") },
+            label = { Text("Dashboard") },
+            selected = currentRoute == Screen.Dashboard.route,
+            onClick = { onNavigate(Screen.Dashboard.route) }
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.List, contentDescription = "Projects") },
+            label = { Text("Projects") },
+            selected = currentRoute == Screen.Projects.route,
+            onClick = { onNavigate(Screen.Projects.route) }
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Assignment, contentDescription = "Tasks") },
+            label = { Text("Tasks") },
+            selected = currentRoute == Screen.TaskList.route,
+            onClick = { onNavigate(Screen.TaskList.route) }
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.People, contentDescription = "Team") },
+            label = { Text("Team") },
+            selected = currentRoute == "team",
+            onClick = { onNavigate("team") }
+        )
     }
 }

@@ -3,41 +3,54 @@ package com.bda.projectpulse.navigation
 sealed class Screen(val route: String) {
     object Auth : Screen("auth")
     object Projects : Screen("projects")
-    object ProjectDetails : Screen("project_details/{projectId}") {
-        fun createRoute(projectId: String) = "project_details/$projectId"
-    }
-    object CreateProject : Screen("create_project")
-    object EditProject : Screen("edit_project/{projectId}") {
-        fun createRoute(projectId: String) = "edit_project/$projectId"
-    }
-    object TaskList : Screen("tasks/{projectId}") {
-        fun createRoute(projectId: String) = "tasks/$projectId"
-    }
-    object TaskDetails : Screen("task_details/{taskId}") {
-        fun createRoute(taskId: String) = "task_details/$taskId"
-    }
-    object CreateTask : Screen("create_task/{projectId}") {
-        fun createRoute(projectId: String) = "create_task/$projectId"
-    }
-    object SubmitTask : Screen("submit_task/{taskId}") {
-        fun createRoute(taskId: String) = "submit_task/$taskId"
-    }
-    object EditTask : Screen("edit_task/{projectId}/{taskId}") {
-        fun createRoute(projectId: String, taskId: String) = "edit_task/$projectId/$taskId"
-    }
+    object Dashboard : Screen("dashboard")
     object Profile : Screen("profile")
-    object TeamMembers : Screen("team_members/{userId}") {
-        fun createRoute(userId: String) = "team_members/$userId"
-    }
-    object TeamManagement : Screen("team_management/{projectId}") {
-        fun createRoute(projectId: String) = "team_management/$projectId"
-    }
-    object AdminSettings : Screen("admin_settings")
-    object AIChat : Screen("ai_chat/{projectId}") {
-        fun createRoute(projectId: String) = "ai_chat/$projectId"
-    }
-    object ProjectChat : Screen("project_chat/{projectId}") {
-        fun createRoute(projectId: String) = "project_chat/$projectId"
-    }
     object Notifications : Screen("notifications")
+    object AdminSettings : Screen("admin_settings")
+    object UserManagement : Screen("user_management")
+    
+    object ProjectDetails : Screen("project/{projectId}") {
+        fun createRoute(projectId: String) = "project/$projectId"
+    }
+    
+    object CreateProject : Screen("project/create")
+    object EditProject : Screen("project/{projectId}/edit") {
+        fun createRoute(projectId: String) = "project/$projectId/edit"
+    }
+    
+    object TaskList : Screen("project/{projectId}/tasks") {
+        fun createRoute(projectId: String) = "project/$projectId/tasks"
+    }
+    
+    object TaskDetails : Screen("task/{taskId}") {
+        fun createRoute(taskId: String) = "task/$taskId"
+    }
+    
+    object CreateTask : Screen("project/{projectId}/task/create") {
+        fun createRoute(projectId: String) = "project/$projectId/task/create"
+    }
+    
+    object EditTask : Screen("project/{projectId}/task/{taskId}/edit") {
+        fun createRoute(projectId: String, taskId: String) = "project/$projectId/task/$taskId/edit"
+    }
+    
+    object SubmitTask : Screen("task/{taskId}/submit") {
+        fun createRoute(taskId: String) = "task/$taskId/submit"
+    }
+    
+    object TeamMembers : Screen("team/{userId}") {
+        fun createRoute(userId: String) = "team/$userId"
+    }
+    
+    object AIChat : Screen("project/{projectId}/ai") {
+        fun createRoute(projectId: String) = "project/$projectId/ai"
+    }
+    
+    object ProjectChat : Screen("project/{projectId}/chat") {
+        fun createRoute(projectId: String) = "project/$projectId/chat"
+    }
+    
+    object TeamManagement : Screen("project/{projectId}/team") {
+        fun createRoute(projectId: String) = "project/$projectId/team"
+    }
 } 

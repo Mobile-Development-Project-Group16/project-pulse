@@ -15,9 +15,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bda.projectpulse.models.Task
 import com.bda.projectpulse.models.UserRole
-import com.bda.projectpulse.ui.common.ErrorMessage
-import com.bda.projectpulse.ui.common.StatusChip
-import com.bda.projectpulse.ui.common.TaskStatusChip
+import com.bda.projectpulse.ui.components.ErrorMessage
+import com.bda.projectpulse.ui.components.StatusChip
+import com.bda.projectpulse.ui.components.TaskStatusChip
 import java.text.SimpleDateFormat
 import java.util.*
 import com.bda.projectpulse.navigation.Screen

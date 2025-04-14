@@ -52,11 +52,64 @@ class NotificationRepositoryImpl @Inject constructor(
     override suspend fun createNotification(notification: Notification) {
         try {
             Log.d(TAG, "Creating notification: type=${notification.type}, for recipient=${notification.recipientId}, title=${notification.title}")
-            val docRef = notificationsCollection.add(notification).await()
+            
+            // Validate notification data
+            if (notification.recipientId.isBlank()) {
+                Log.e(TAG, "Cannot create notification with empty recipient ID")
+                return
+            }
+            
+            // Set a timestamp if not provided
+            val notificationWithTimestamp = if (notification.timestamp == null) {
+                notification.copy(timestamp = Timestamp.now())
+            } else {
+                notification
+            }
+            
+            // Create a Map with appropriate types using a HashMap, which allows for heterogeneous value types
+            val notificationMap = HashMap<String, Any>()
+            notificationMap["type"] = notificationWithTimestamp.type.name
+            notificationMap["title"] = notificationWithTimestamp.title
+            notificationMap["message"] = notificationWithTimestamp.message
+            notificationMap["recipientId"] = notificationWithTimestamp.recipientId
+            notificationMap["senderId"] = notificationWithTimestamp.senderId
+            notificationMap["timestamp"] = notificationWithTimestamp.timestamp
+            notificationMap["read"] = notificationWithTimestamp.read
+            
+            // Add data map separately to avoid type issues
+            if (notificationWithTimestamp.data.isNotEmpty()) {
+                notificationMap["data"] = notificationWithTimestamp.data
+            }
+            
+            // Add to Firestore
+            val docRef = notificationsCollection.add(notificationMap).await()
             Log.d(TAG, "Notification created successfully with ID: ${docRef.id}")
-            // Send push notification will be implemented later
+            
+            // Optionally, send a push notification here in the future
         } catch (e: Exception) {
             Log.e(TAG, "Error creating notification", e)
+            // Try again with a simpler approach if there was an issue
+            try {
+                Log.d(TAG, "Retrying notification creation with simpler approach")
+                // Create a Map with appropriate types
+                val simpleNotification = HashMap<String, Any>()
+                simpleNotification["type"] = notification.type.name
+                simpleNotification["title"] = notification.title
+                simpleNotification["message"] = notification.message
+                simpleNotification["recipientId"] = notification.recipientId
+                simpleNotification["senderId"] = notification.senderId
+                simpleNotification["timestamp"] = Timestamp.now()
+                simpleNotification["read"] = false
+                
+                if (notification.data.isNotEmpty()) {
+                    simpleNotification["data"] = notification.data
+                }
+                
+                val docRef = notificationsCollection.add(simpleNotification).await()
+                Log.d(TAG, "Notification created successfully on retry with ID: ${docRef.id}")
+            } catch (e2: Exception) {
+                Log.e(TAG, "Error creating notification on retry", e2)
+            }
         }
     }
 

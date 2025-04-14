@@ -16,65 +16,66 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
+import com.bda.projectpulse.models.UserRole
+import com.bda.projectpulse.ui.components.MainBottomBar
 import com.bda.projectpulse.ui.components.StatusChip
+import com.bda.projectpulse.ui.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
-    onProjectClick: (String) -> Unit,
-    onTaskClick: (String) -> Unit,
-    onViewAllProjects: () -> Unit,
-    onViewAllTasks: () -> Unit,
-    onCreateProject: () -> Unit,
-    onCreateTask: () -> Unit,
-    onProfileClick: () -> Unit
+    navController: NavHostController,
+    viewModel: DashboardViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadDashboardData()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Dashboard") },
                 actions = {
-                    IconButton(onClick = onProfileClick) {
-                        Icon(Icons.Default.Person, contentDescription = "Profile")
+                    if (currentUser?.role == UserRole.ADMIN) {
+                        IconButton(onClick = { navController.navigate(Screen.UserManagement.route) }) {
+                            Icon(Icons.Default.People, contentDescription = "User Management")
+                        }
+                        IconButton(onClick = { navController.navigate(Screen.Settings.route) }) {
+                            Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        }
                     }
                 }
             )
+        },
+        bottomBar = {
+            MainBottomBar(
+                navController = navController,
+                unreadNotificationCount = uiState.unreadNotificationCount
+            )
         }
-    ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Statistics Cards
-            item {
-                StatisticsSection()
+    ) { _ ->
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
-
-            // Recent Projects
-            item {
-                SectionHeader(
-                    title = "Recent Projects",
-                    onViewAll = onViewAllProjects,
-                    onAdd = onCreateProject
-                )
-            }
-            item {
-                RecentProjects(onProjectClick = onProjectClick)
-            }
-
-            // Tasks Overview
-            item {
-                SectionHeader(
-                    title = "Tasks Overview",
-                    onViewAll = onViewAllTasks,
-                    onAdd = onCreateTask
-                )
-            }
-            item {
-                TasksOverview(onTaskClick = onTaskClick)
-            }
+        } else {
+            RoleDashboardScreen(
+                onNavigateToUserManagement = { navController.navigate(Screen.UserManagement.route) },
+                onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                onNavigateToProjects = { navController.navigate(Screen.Projects.route) },
+                onNavigateToTasks = { navController.navigate(Screen.Tasks.route) },
+                navController = navController,
+                viewModel = viewModel
+            )
         }
     }
 }
@@ -311,6 +312,148 @@ private fun TaskItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun DashboardButton(
+    icon: ImageVector,
+    text: String,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.padding(8.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text)
+    }
+}
+
+@Composable
+fun AdminDashboardContent(stats: DashboardStats) {
+    Column(
+        modifier = Modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        StatCard(
+            title = "Total Users",
+            value = stats.totalUsers.toString(),
+            icon = Icons.Default.People
+        )
+        StatCard(
+            title = "Total Projects",
+            value = stats.totalProjects.toString(),
+            icon = Icons.Default.Folder
+        )
+        StatCard(
+            title = "Active Projects",
+            value = stats.activeProjects.toString(),
+            icon = Icons.Default.CheckCircle
+        )
+        StatCard(
+            title = "Pending Tasks",
+            value = stats.pendingTasks.toString(),
+            icon = Icons.Default.Assignment
+        )
+    }
+}
+
+@Composable
+fun ManagerDashboardContent(stats: DashboardStats) {
+    Column(
+        modifier = Modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        StatCard(
+            title = "Total Projects",
+            value = stats.totalProjects.toString(),
+            icon = Icons.Default.Folder
+        )
+        StatCard(
+            title = "Active Projects",
+            value = stats.activeProjects.toString(),
+            icon = Icons.Default.CheckCircle
+        )
+        StatCard(
+            title = "Pending Tasks",
+            value = stats.pendingTasks.toString(),
+            icon = Icons.Default.Assignment
+        )
+        StatCard(
+            title = "Team Members",
+            value = stats.totalTeamMembers.toString(),
+            icon = Icons.Default.People
+        )
+    }
+}
+
+@Composable
+fun TeamMemberDashboardContent(stats: DashboardStats) {
+    Column(
+        modifier = Modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        StatCard(
+            title = "Assigned Tasks",
+            value = stats.assignedTasks.toString(),
+            icon = Icons.Default.Assignment
+        )
+        StatCard(
+            title = "Pending Tasks",
+            value = stats.pendingTasks.toString(),
+            icon = Icons.Default.HourglassEmpty
+        )
+        StatCard(
+            title = "Submitted Tasks",
+            value = stats.submittedTasks.toString(),
+            icon = Icons.Default.Upload
+        )
+        StatCard(
+            title = "Approved Tasks",
+            value = stats.approvedTasks.toString(),
+            icon = Icons.Default.CheckCircle
+        )
+    }
+}
+
+@Composable
+fun StatCard(
+    title: String,
+    value: String,
+    icon: ImageVector
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.headlineMedium
+                )
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp)
+            )
         }
     }
 } 

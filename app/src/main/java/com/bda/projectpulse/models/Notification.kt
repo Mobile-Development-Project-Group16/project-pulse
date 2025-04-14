@@ -5,10 +5,11 @@ import com.google.firebase.Timestamp
 enum class NotificationType {
     TASK_ASSIGNED,
     TASK_COMPLETED,
-    CHAT_MESSAGE,
     TASK_APPROVED,
     TASK_REJECTED,
-    TASK_UPDATED
+    TASK_UPDATED,
+    TASK_SUBMITTED,
+    CHAT_MESSAGE
 }
 
 data class Notification(

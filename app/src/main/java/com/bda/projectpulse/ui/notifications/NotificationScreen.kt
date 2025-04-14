@@ -171,7 +171,8 @@ private fun NotificationItem(
                 NotificationType.TASK_COMPLETED,
                 NotificationType.TASK_APPROVED,
                 NotificationType.TASK_REJECTED,
-                NotificationType.TASK_UPDATED -> {
+                NotificationType.TASK_UPDATED,
+                NotificationType.TASK_SUBMITTED -> {
                     notification.data["taskId"]?.let { onNavigateToTask(it) }
                 }
                 NotificationType.CHAT_MESSAGE -> {
@@ -199,6 +200,7 @@ private fun NotificationItem(
                         NotificationType.TASK_APPROVED -> Icons.Default.CheckCircle
                         NotificationType.TASK_REJECTED -> Icons.Default.Cancel
                         NotificationType.TASK_UPDATED -> Icons.Default.Update
+                        NotificationType.TASK_SUBMITTED -> Icons.Default.Upload
                     },
                     contentDescription = null,
                     tint = if (!notification.read) MaterialTheme.colorScheme.primary 

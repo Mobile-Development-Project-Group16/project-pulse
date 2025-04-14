@@ -76,7 +76,7 @@ class TaskRepository @Inject constructor(
     }
 
     suspend fun updateTask(task: Task) {
-        Log.d(TAG, "Updating task: ${task.title} (${task.id})")
+        Log.d(TAG, "Updating task: ${task.title} (${task.id}) with status: ${task.status}")
         taskDataSource.updateTask(task)
         
         // Create notification for task updates if there are assignees
@@ -148,7 +148,7 @@ class TaskRepository @Inject constructor(
                 
                 val notificationType = when(status) {
                     TaskStatus.APPROVED -> NotificationType.TASK_APPROVED
-                    TaskStatus.IN_REVIEW -> NotificationType.TASK_UPDATED
+                    TaskStatus.IN_REVIEW -> NotificationType.TASK_SUBMITTED
                     TaskStatus.REJECTED -> NotificationType.TASK_REJECTED
                     else -> NotificationType.TASK_UPDATED
                 }
@@ -156,7 +156,7 @@ class TaskRepository @Inject constructor(
                 // Create notification title based on status
                 val notificationTitle = when(status) {
                     TaskStatus.APPROVED -> "Task Approved"
-                    TaskStatus.IN_REVIEW -> "Task Ready for Review"
+                    TaskStatus.IN_REVIEW -> "Task Submitted for Review"
                     TaskStatus.REJECTED -> "Task Rejected"
                     TaskStatus.TODO -> "Task Moved to To-Do"
                     TaskStatus.IN_PROGRESS -> "Task In Progress"
@@ -166,7 +166,7 @@ class TaskRepository @Inject constructor(
                 // Create notification message based on status
                 val notificationMessage = when(status) {
                     TaskStatus.APPROVED -> "$updaterName approved task '${task.title}'"
-                    TaskStatus.IN_REVIEW -> "$updaterName marked task '${task.title}' as ready for review"
+                    TaskStatus.IN_REVIEW -> "$updaterName submitted task '${task.title}' for review"
                     TaskStatus.REJECTED -> "$updaterName rejected task '${task.title}'"
                     TaskStatus.TODO -> "$updaterName moved task '${task.title}' to To-Do"
                     TaskStatus.IN_PROGRESS -> "$updaterName started working on task '${task.title}'"
@@ -182,21 +182,47 @@ class TaskRepository @Inject constructor(
                     Log.d(TAG, "Adding task creator ${task.createdBy} to notification recipients")
                 }
                 
-                // Get the project to find out who's the project owner
+                // Special handling for IN_REVIEW status (task submissions)
                 if (status == TaskStatus.IN_REVIEW) {
                     try {
-                        // Get the project to find the project owner
+                        Log.d(TAG, "Processing IN_REVIEW status for task ${task.id}, getting project details")
+                        // Get the project to find the project owner and managers
                         val projectDoc = firestore.collection("projects").document(task.projectId).get().await()
-                        val project = projectDoc.data
-                        val projectOwnerId = project?.get("ownerId") as? String
-                        
-                        // Add project owner to recipients if they're not already included
-                        if (projectOwnerId != null && projectOwnerId != currentUser.uid && !notificationRecipients.contains(projectOwnerId)) {
-                            notificationRecipients.add(projectOwnerId)
-                            Log.d(TAG, "Adding project owner $projectOwnerId to notification recipients for review")
+                        if (projectDoc.exists()) {
+                            val projectData = projectDoc.data
+                            if (projectData != null) {
+                                Log.d(TAG, "Found project data for project ID: ${task.projectId}")
+                                
+                                // Add project owner to recipients if they're not already included
+                                val projectOwnerId = projectData["ownerId"] as? String
+                                if (projectOwnerId != null && projectOwnerId != currentUser.uid && !notificationRecipients.contains(projectOwnerId)) {
+                                    notificationRecipients.add(projectOwnerId)
+                                    Log.d(TAG, "Adding project owner $projectOwnerId to notification recipients for review")
+                                } else {
+                                    Log.d(TAG, "Project owner is either null, the current user, or already included")
+                                }
+                                
+                                // For submitted tasks, also notify any users with MANAGER role in the project
+                                val projectManagerIds = projectData["managerIds"] as? List<String> ?: emptyList()
+                                if (projectManagerIds.isNotEmpty()) {
+                                    Log.d(TAG, "Found ${projectManagerIds.size} managers for the project")
+                                    projectManagerIds.forEach { managerId ->
+                                        if (managerId != currentUser.uid && !notificationRecipients.contains(managerId)) {
+                                            notificationRecipients.add(managerId)
+                                            Log.d(TAG, "Adding project manager $managerId to notification recipients for review")
+                                        }
+                                    }
+                                } else {
+                                    Log.d(TAG, "No managers found for the project")
+                                }
+                            } else {
+                                Log.e(TAG, "Project document exists but data is null for project ID: ${task.projectId}")
+                            }
+                        } else {
+                            Log.e(TAG, "Project document does not exist for project ID: ${task.projectId}")
                         }
                     } catch (e: Exception) {
-                        Log.e(TAG, "Error getting project details", e)
+                        Log.e(TAG, "Error getting project details for notifications", e)
                     }
                 }
                 
@@ -204,12 +230,17 @@ class TaskRepository @Inject constructor(
                 task.assigneeIds.forEach { assigneeId ->
                     if (assigneeId != currentUser.uid) {
                         notificationRecipients.add(assigneeId)
+                        Log.d(TAG, "Adding assignee $assigneeId to notification recipients")
                     }
                 }
                 
-                Log.d(TAG, "Will send status change notifications to ${notificationRecipients.size} recipients")
+                Log.d(TAG, "Will send status change notifications to ${notificationRecipients.size} recipients: $notificationRecipients")
                 
-                // Send notifications to all recipients
+                if (notificationRecipients.isEmpty()) {
+                    Log.w(TAG, "No recipients found for notification. This could be an issue.")
+                }
+                
+                // Send notifications to all recipients with retry logic
                 notificationRecipients.forEach { recipientId ->
                     Log.d(TAG, "Creating task status notification for user: $recipientId, status: $status")
                     val notification = Notification(
@@ -226,11 +257,25 @@ class TaskRepository @Inject constructor(
                             "projectId" to task.projectId
                         )
                     )
-                    notificationRepository.createNotification(notification)
-                    Log.d(TAG, "Notification created for task status change")
+                    
+                    try {
+                        notificationRepository.createNotification(notification)
+                        Log.d(TAG, "Notification successfully created for recipient $recipientId")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error creating notification for recipient $recipientId, will retry", e)
+                        // Retry once after a short delay
+                        try {
+                            // Wait a moment before retrying
+                            kotlinx.coroutines.delay(1000)
+                            notificationRepository.createNotification(notification)
+                            Log.d(TAG, "Notification successfully created on retry for recipient $recipientId")
+                        } catch (e2: Exception) {
+                            Log.e(TAG, "Error creating notification for recipient $recipientId after retry", e2)
+                        }
+                    }
                 }
             } else {
-                Log.d(TAG, "No notifications created for status update: currentUser is null")
+                Log.e(TAG, "No notifications created for status update: currentUser is null")
             }
             
             Result.success(Unit)

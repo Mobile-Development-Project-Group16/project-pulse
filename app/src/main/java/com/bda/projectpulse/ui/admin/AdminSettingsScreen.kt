@@ -16,7 +16,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.bda.projectpulse.data.models.AvailableModels
 import com.bda.projectpulse.data.models.ModelConfig
 import com.bda.projectpulse.models.UserRole
-import com.bda.projectpulse.ui.common.ErrorMessage
+import com.bda.projectpulse.ui.components.ErrorMessage
 import com.bda.projectpulse.utils.SecureStorage
 import com.google.firebase.auth.FirebaseAuth
 
@@ -24,7 +24,7 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun AdminSettingsScreen(
     onNavigateBack: () -> Unit,
-    viewModel: AdminSettingsViewModel
+    viewModel: AdminSettingsViewModel = hiltViewModel()
 ) {
     val apiKey by viewModel.apiKey.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
