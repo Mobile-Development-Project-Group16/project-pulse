@@ -34,6 +34,9 @@ class AdminSettingsViewModel @Inject constructor(
     // Use the ModelConfigDataSource's activeModel directly
     val activeModel: StateFlow<ModelConfig> = modelConfigDataSource.activeModel
 
+    private val _selectedModel = MutableStateFlow("deepseek-chat-v3")
+    val selectedModel: StateFlow<String> = _selectedModel.asStateFlow()
+
     init {
         loadSettings()
     }
@@ -59,21 +62,15 @@ class AdminSettingsViewModel @Inject constructor(
         _apiKey.value = key
     }
 
-    fun saveApiKey() {
+    fun saveApiKey(apiKey: String) {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
                 _error.value = null
-                _success.value = null
-
-                if (apiKeyDataSource.saveApiKey(_apiKey.value)) {
-                    _success.value = "API key saved successfully"
-                } else {
-                    _error.value = "Failed to save API key"
-                }
+                // TODO: Implement API key saving logic
+                _isLoading.value = false
             } catch (e: Exception) {
-                _error.value = "Failed to save API key: ${e.message}"
-            } finally {
+                _error.value = e.message ?: "Failed to save API key"
                 _isLoading.value = false
             }
         }
@@ -90,6 +87,21 @@ class AdminSettingsViewModel @Inject constructor(
                 _success.value = "Model updated successfully"
             } catch (e: Exception) {
                 _error.value = "Failed to update model: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun updateModel(modelId: String) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                _selectedModel.value = modelId
+                // TODO: Save the selected model to preferences or database
+            } catch (e: Exception) {
+                _error.value = e.message
             } finally {
                 _isLoading.value = false
             }

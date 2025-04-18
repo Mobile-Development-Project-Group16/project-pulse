@@ -19,23 +19,29 @@ import com.bda.projectpulse.models.UserRole
 import com.bda.projectpulse.ui.components.ErrorMessage
 import com.bda.projectpulse.utils.SecureStorage
 import com.google.firebase.auth.FirebaseAuth
+import com.bda.projectpulse.ui.components.LoadingIndicator
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminSettingsScreen(
-    onNavigateBack: () -> Unit,
-    viewModel: AdminSettingsViewModel = hiltViewModel()
+    viewModel: AdminSettingsViewModel = hiltViewModel(),
+    onNavigateBack: () -> Unit
 ) {
-    val apiKey by viewModel.apiKey.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
-    val success by viewModel.success.collectAsState()
-    val activeModel by viewModel.activeModel.collectAsState()
+    val selectedModel by viewModel.selectedModel.collectAsState()
+    var apiKey by remember { mutableStateOf("") }
+    var showApiKey by remember { mutableStateOf(false) }
+
+    if (isLoading) {
+        LoadingIndicator()
+        return
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Admin Settings") },
+                title = { Text("AI Model Settings") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -44,112 +50,106 @@ fun AdminSettingsScreen(
             )
         }
     ) { padding ->
-        if (isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-            return@Scaffold
-        }
-
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-                OutlinedTextField(
-                    value = apiKey,
-                    onValueChange = viewModel::updateApiKey,
-                    label = { Text("OpenRouter API Key") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            item {
-                Button(
-                    onClick = viewModel::saveApiKey,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Save API Key")
-                }
-            }
-
-            item {
-                Text(
-                    text = "Available Models",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-
-            items(AvailableModels.ALL_MODELS) { model ->
-                ModelSelectionItem(
-                    model = model,
-                    isSelected = activeModel?.id == model.id,
-                    onSelect = { viewModel.setActiveModel(model.id) }
-                )
-            }
-
-            if (error != null) {
-                item {
-                    Text(
-                        text = error!!,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
-
-            if (success != null) {
-                item {
-                    Text(
-                        text = success!!,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ModelSelectionItem(
-    model: ModelConfig,
-    isSelected: Boolean,
-    onSelect: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onSelect
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = model.name,
-                    style = MaterialTheme.typography.titleSmall
-                )
-                Text(
-                    text = model.description,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            RadioButton(
-                selected = isSelected,
-                onClick = onSelect
+            Text(
+                text = "AI Model Settings",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(16.dp)
             )
+
+            // API Key Section
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "OpenRouter API Key",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        text = "Enter your OpenRouter API key to enable AI chat functionality",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    
+                    OutlinedTextField(
+                        value = apiKey,
+                        onValueChange = { apiKey = it },
+                        label = { Text("API Key") },
+                        modifier = Modifier.fillMaxWidth(),
+                        visualTransformation = if (showApiKey) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { showApiKey = !showApiKey }) {
+                                Icon(
+                                    if (showApiKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    contentDescription = if (showApiKey) "Hide API Key" else "Show API Key"
+                                )
+                            }
+                        }
+                    )
+                    
+                    Button(
+                        onClick = { viewModel.saveApiKey(apiKey) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Save, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Save API Key")
+                    }
+                }
+            }
+
+            // Model Selection Section
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Select AI Model",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        text = "Choose the AI model for chat functionality",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    // Only show Deepseek chat v3 option
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Deepseek chat v3")
+                        RadioButton(
+                            selected = selectedModel == "deepseek-chat-v3",
+                            onClick = { /* No action needed as this is the only option */ }
+                        )
+                    }
+                }
+            }
+
+            // Error message
+            error?.let { errorMessage ->
+                Text(
+                    text = errorMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
         }
     }
 }

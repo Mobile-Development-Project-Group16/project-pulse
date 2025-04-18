@@ -14,6 +14,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bda.projectpulse.models.User
 import com.bda.projectpulse.models.UserRole
+import androidx.compose.foundation.clickable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,8 +29,6 @@ fun TeamManagementScreen(
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
     var showAddMemberDialog by remember { mutableStateOf(false) }
-    var selectedUser by remember { mutableStateOf<User?>(null) }
-    var selectedRole by remember { mutableStateOf<UserRole?>(null) }
 
     LaunchedEffect(projectId) {
         viewModel.loadTeamMembers(projectId)
@@ -58,87 +57,144 @@ fun TeamManagementScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(teamMembers) { member ->
-                    TeamMemberCard(
-                        member = member,
-                        onRemove = { viewModel.removeTeamMember(projectId, member.uid) },
-                        onRoleChange = { newRole ->
-                            viewModel.updateTeamMemberRole(projectId, member.uid, newRole)
-                        }
+            if (isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else if (error != null) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = error ?: "Unknown error occurred",
+                        color = MaterialTheme.colorScheme.error
                     )
+                }
+            } else {
+                if (teamMembers.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No team members found")
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(teamMembers) { member ->
+                            TeamMemberCard(
+                                member = member,
+                                onRemove = { viewModel.removeTeamMember(projectId, member.uid) }
+                            )
+                        }
+                    }
                 }
             }
         }
+    }
 
-        if (showAddMemberDialog) {
-            AlertDialog(
-                onDismissRequest = { showAddMemberDialog = false },
-                title = { Text("Add Team Member") },
-                text = {
-                    Column {
-                        OutlinedTextField(
-                            value = selectedUser?.displayName ?: "",
-                            onValueChange = { },
-                            label = { Text("Select User") },
-                            readOnly = true,
-                            modifier = Modifier.fillMaxWidth(),
-                            trailingIcon = {
-                                IconButton(onClick = { /* TODO: Show user selection dialog */ }) {
-                                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Select User")
-                                }
+    if (showAddMemberDialog) {
+        AddTeamMemberDialog(
+            availableUsers = availableUsers,
+            onDismiss = { showAddMemberDialog = false },
+            onAddMember = { userId ->
+                val user = availableUsers.find { it.uid == userId }
+                user?.let { 
+                    viewModel.addTeamMember(projectId, userId, it.role)
+                    showAddMemberDialog = false
+                }
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddTeamMemberDialog(
+    availableUsers: List<User>,
+    onDismiss: () -> Unit,
+    onAddMember: (String) -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedUser by remember { mutableStateOf<User?>(null) }
+
+    val filteredUsers = availableUsers.filter { user ->
+        user.displayName.contains(searchQuery, ignoreCase = true) ||
+        user.email.contains(searchQuery, ignoreCase = true)
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add Team Member") },
+        text = {
+            Column {
+                // Search field
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    label = { Text("Search users") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // User selection
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 200.dp)
+                ) {
+                    items(filteredUsers) { user ->
+                        ListItem(
+                            headlineContent = { Text(user.displayName) },
+                            supportingContent = { Text(user.email) },
+                            leadingContent = {
+                                Icon(
+                                    Icons.Default.Person,
+                                    contentDescription = null
+                                )
+                            },
+                            modifier = Modifier.clickable {
+                                selectedUser = user
                             }
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        OutlinedTextField(
-                            value = selectedRole?.name ?: "",
-                            onValueChange = { },
-                            label = { Text("Select Role") },
-                            readOnly = true,
-                            modifier = Modifier.fillMaxWidth(),
-                            trailingIcon = {
-                                IconButton(onClick = { /* TODO: Show role selection dialog */ }) {
-                                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Role")
-                                }
-                            }
-                        )
-                    }
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            selectedUser?.let { user ->
-                                selectedRole?.let { role ->
-                                    viewModel.addTeamMember(projectId, user.uid, role)
-                                    showAddMemberDialog = false
-                                }
-                            }
-                        },
-                        enabled = selectedUser != null && selectedRole != null
-                    ) {
-                        Text("Add")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showAddMemberDialog = false }) {
-                        Text("Cancel")
                     }
                 }
-            )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    selectedUser?.let { user ->
+                        onAddMember(user.uid)
+                    }
+                },
+                enabled = selectedUser != null
+            ) {
+                Text("Add")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
         }
-    }
+    )
 }
 
 @Composable
 private fun TeamMemberCard(
     member: User,
-    onRemove: () -> Unit,
-    onRoleChange: (UserRole) -> Unit
+    onRemove: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth()

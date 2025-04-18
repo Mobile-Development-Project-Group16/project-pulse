@@ -3,8 +3,12 @@ package com.bda.projectpulse.repositories
 import com.bda.projectpulse.models.User
 import com.bda.projectpulse.models.UserRole
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -14,24 +18,22 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class UserRepository @Inject constructor(
-    private val firestore: FirebaseFirestore
-) {
-    private val usersCollection = firestore.collection("users")
+class UserRepository @Inject constructor() {
+    private val auth: FirebaseAuth = Firebase.auth
+    private val db: FirebaseFirestore = Firebase.firestore
+    private val usersCollection = db.collection("users")
 
     suspend fun getCurrentUser(): User? {
-        try {
-            val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
-            var currentUser: User? = null
-            auth.currentUser?.let { firebaseUser ->
-                getUserById(firebaseUser.uid).collect { user ->
-                    currentUser = user
-                }
-            }
-            return currentUser
-        } catch (e: Exception) {
-            return null
-        }
+        val currentUser = auth.currentUser ?: return null
+        val userDoc = usersCollection.document(currentUser.uid).get().await()
+        
+        return User(
+            uid = currentUser.uid,
+            email = currentUser.email ?: "",
+            displayName = currentUser.displayName ?: "",
+            photoUrl = currentUser.photoUrl?.toString(),
+            role = UserRole.valueOf(userDoc.getString("role") ?: "USER")
+        )
     }
 
     fun getUsers(): Flow<List<User>> = flow {
@@ -60,8 +62,8 @@ class UserRepository @Inject constructor(
             // Create a mutable map and add entries
             val userData = mutableMapOf<String, Any>()
             userData["uid"] = user.uid
-            userData["email"] = user.email
-            userData["displayName"] = user.displayName
+            userData["email"] = user.email ?: ""
+            userData["displayName"] = user.displayName ?: ""
             if (user.photoUrl != null) {
                 userData["photoUrl"] = user.photoUrl
             }
@@ -81,8 +83,8 @@ class UserRepository @Inject constructor(
             // Create a mutable map and add entries
             val updates = mutableMapOf<String, Any>()
             updates["uid"] = user.uid
-            updates["email"] = user.email
-            updates["displayName"] = user.displayName
+            updates["email"] = user.email ?: ""
+            updates["displayName"] = user.displayName ?: ""
             if (user.photoUrl != null) {
                 updates["photoUrl"] = user.photoUrl
             }
@@ -101,6 +103,36 @@ class UserRepository @Inject constructor(
             usersCollection.document(userId).delete().await()
         } catch (e: Exception) {
             throw e
+        }
+    }
+
+    suspend fun searchUsersByEmail(query: String): List<User> {
+        val snapshot = usersCollection
+            .whereGreaterThanOrEqualTo("email", query)
+            .whereLessThanOrEqualTo("email", query + "\uf8ff")
+            .get()
+            .await()
+
+        return snapshot.documents.mapNotNull { doc ->
+            try {
+                User(
+                    uid = doc.id,
+                    email = doc.getString("email") ?: "",
+                    displayName = doc.getString("displayName") ?: "",
+                    photoUrl = doc.getString("photoUrl")
+                )
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+
+    suspend fun updateUserProfile(userId: String, photoUrl: String? = null) {
+        val updates = mutableMapOf<String, Any>()
+        photoUrl?.let { updates["photoUrl"] = it }
+        
+        if (updates.isNotEmpty()) {
+            usersCollection.document(userId).update(updates).await()
         }
     }
 } 
