@@ -1,0 +1,348 @@
+> Task :app:kaptGenerateStubsDebugKotlin
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:3:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:3:2 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:3:3 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:3:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:3:5 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:3:6 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:3:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:3:9 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:3:13 imports are only allowed in the beginning of file
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:7:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:7:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:7:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:7:8 imports are only allowed in the beginning of file
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:13:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:13:2 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:13:3 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:13:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:13:5 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:13:6 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:13:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:13:9 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:13:17 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:13:18 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:13:23 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:13:33 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:13:39 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:13:40 imports are only allowed in the beginning of file
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:34:1 Parameter name expected
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:34:2 Parameters must have type annotation
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:34:3 Expecting comma or ')'
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:34:3 Expecting ')'
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:34:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:34:5 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:34:6 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:34:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:34:9 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:35:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:35:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:35:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:36:47 Property getter or setter expected
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:37:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:37:2 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:37:3 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:37:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:37:5 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:37:6 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:37:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:37:9 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:37:17 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:37:18 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:37:23 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:37:33 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:37:39 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:39:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:39:3 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:482:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:482:2 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:492:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:492:4 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:517:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:517:2 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/repositories/TaskRepository.kt:538:2 Expecting '}'
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:3:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:3:2 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:3:3 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:3:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:3:5 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:3:6 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:3:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:3:9 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:4:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:4:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:4:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:4:8 imports are only allowed in the beginning of file
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:9:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:9:2 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:9:3 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:9:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:9:5 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:9:6 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:9:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:9:9 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:9:17 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:9:18 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:9:23 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:9:33 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:9:39 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:9:40 imports are only allowed in the beginning of file
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:14:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:14:2 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:14:3 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:14:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:14:5 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:14:6 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:14:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:14:9 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:14:13 imports are only allowed in the beginning of file
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:17:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:17:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:17:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:17:8 imports are only allowed in the beginning of file
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:19:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:19:2 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:19:3 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:19:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:19:5 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:19:6 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:19:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:19:9 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:19:17 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:19:18 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:19:23 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:19:33 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:19:39 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:19:40 imports are only allowed in the beginning of file
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:24:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:24:2 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:24:3 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:24:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:24:5 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:24:6 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:24:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:24:9 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:24:13 imports are only allowed in the beginning of file
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:28:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:28:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:28:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:28:8 imports are only allowed in the beginning of file
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:35:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:35:2 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:35:3 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:35:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:35:5 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:35:6 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:35:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:35:9 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:35:17 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:35:18 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:35:23 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:35:33 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:35:39 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:35:40 imports are only allowed in the beginning of file
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:52:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:52:2 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:53:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:53:4 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:62:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:62:2 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:93:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:93:2 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:95:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:95:4 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:135:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:135:2 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:145:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:145:2 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:146:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:146:4 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:150:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:150:2 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:160:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:160:2 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:164:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:164:4 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:169:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:169:2 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:172:17 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:175:14 Expecting ')'
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:180:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:180:2 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:183:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:183:4 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:190:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:190:2 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:221:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:221:2 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:222:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:222:4 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:272:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:272:2 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:280:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:280:2 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:281:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:281:4 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:295:1 Expecting an element
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:295:2 Unexpected tokens (use ';' to separate expressions on the same line)
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/ui/chat/ProjectChatScreen.kt:296:2 Expecting '}'
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:3:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:3:2 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:3:3 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:3:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:3:5 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:3:6 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:3:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:3:9 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:4:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:4:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:4:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:4:8 imports are only allowed in the beginning of file
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:6:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:6:2 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:6:3 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:6:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:6:5 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:6:6 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:6:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:6:9 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:6:17 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:6:18 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:6:23 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:6:33 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:6:39 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:6:40 imports are only allowed in the beginning of file
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:11:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:11:2 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:11:3 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:11:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:11:5 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:11:6 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:11:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:11:9 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:12:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:12:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:12:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:12:8 imports are only allowed in the beginning of file
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:14:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:14:2 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:14:3 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:14:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:14:5 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:14:6 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:14:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:14:9 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:14:17 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:14:18 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:14:23 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:14:33 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:14:39 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:14:40 imports are only allowed in the beginning of file
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:19:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:19:2 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:19:3 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:19:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:19:5 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:19:6 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:19:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:19:9 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:20:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:20:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:20:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:20:8 imports are only allowed in the beginning of file
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:22:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:22:2 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:22:3 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:22:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:22:5 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:22:6 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:22:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:22:9 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:22:17 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:22:18 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:22:23 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:22:33 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:22:39 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:22:40 imports are only allowed in the beginning of file
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:27:1 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:27:2 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:27:3 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:27:4 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:27:5 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:27:6 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:27:7 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:27:9 Expecting a top level declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:30:1 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:30:4 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:30:7 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:31:1 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:31:8 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:31:13 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:31:14 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:31:20 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:31:21 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:37:1 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:37:2 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:37:3 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:37:4 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:37:5 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:37:6 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:37:7 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:37:9 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:37:17 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:37:18 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:37:23 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:37:33 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:37:39 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:47:1 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:47:2 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:47:3 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:47:4 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:47:5 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:47:6 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:47:7 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:47:9 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:48:1 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:48:4 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:48:7 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:52:1 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:52:2 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:52:3 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:52:4 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:52:5 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:52:6 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:52:7 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:52:9 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:52:17 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:52:18 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:52:23 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:52:33 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:52:39 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:166:1 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:166:2 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:166:3 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:166:4 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:166:5 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:166:6 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:166:7 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:166:9 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:167:1 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:167:4 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:167:7 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:196:1 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:196:2 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:196:3 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:196:4 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:196:5 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:196:6 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:196:7 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:196:9 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:196:17 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:196:18 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:196:23 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:196:33 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:196:39 Expecting member declaration
+e: file:///E:/pp/app/src/main/java/com/bda/projectpulse/viewmodels/TaskViewModel.kt:197:2 Missing '}
+
+> Task :app:kaptGenerateStubsDebugKotlin FAILED
+
