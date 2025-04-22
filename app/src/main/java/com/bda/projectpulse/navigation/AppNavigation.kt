@@ -49,6 +49,7 @@ fun AppNavigation(
                 onNavigateToSettings = { navController.navigate("admin_settings") },
                 onNavigateToProjects = { navController.navigate("projects") },
                 onNavigateToTasks = { navController.navigate("tasks") },
+                onNavigateToProfile = { navController.navigate("profile") },
                 navController = navController
             )
         }
@@ -156,6 +157,9 @@ fun AppNavigation(
                 },
                 onNavigateToTaskList = {
                     navController.navigate(Screen.TaskList.createRoute(projectId))
+                },
+                onNavigateToAddTeamMember = {
+                    navController.navigate(Screen.TeamManagement.createRoute(projectId))
                 },
                 navController = navController
             )
@@ -394,6 +398,9 @@ fun AppNavigation(
                 },
                 onNavigateToTasks = {
                     navController.navigateUp()
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Screen.Profile.route)
                 },
                 navController = navController
             )

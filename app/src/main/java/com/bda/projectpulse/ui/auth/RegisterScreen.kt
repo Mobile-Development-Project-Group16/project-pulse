@@ -91,7 +91,7 @@ fun RegisterScreen(
         OutlinedTextField(
             value = formState.displayName,
             onValueChange = viewModel::updateDisplayName,
-            label = { Text("Display Name") },
+            label = { Text("Full name") },
             modifier = Modifier.fillMaxWidth(),
             isError = formState.error != null
         )

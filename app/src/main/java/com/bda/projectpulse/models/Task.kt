@@ -19,7 +19,26 @@ data class Task(
     val createdBy: String = "",
     val rejectionComment: String = "",
     val submissionText: String = ""
-)
+) {
+    constructor() : this(
+        id = "",
+        title = "",
+        description = "",
+        projectId = "",
+        assigneeIds = emptyList(),
+        status = TaskStatus.TODO,
+        priority = TaskPriority.MEDIUM,
+        dueDate = null,
+        createdAt = Timestamp.now(),
+        updatedAt = Timestamp.now(),
+        comments = emptyList(),
+        subTasks = emptyList(),
+        attachments = emptyList(),
+        createdBy = "",
+        rejectionComment = "",
+        submissionText = ""
+    )
+}
 
 data class Comment(
     val id: String = "",

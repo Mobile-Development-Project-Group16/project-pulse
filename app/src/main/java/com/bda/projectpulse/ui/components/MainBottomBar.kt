@@ -98,11 +98,12 @@ fun MainBottomBar(
                         navController.navigate(item.route) {
                             // Pop up to the Projects destination to avoid building up a large stack
                             popUpTo(Screen.Projects.route) {
-                                // Keep the Projects destination if we're navigating to something else
-                                inclusive = (item.route == Screen.Projects.route)
+                                saveState = true
                             }
-                            // Avoid multiple copies of the same destination
+                            // Avoid multiple copies of the same destination when reselecting the same item
                             launchSingleTop = true
+                            // Restore state when reselecting a previously selected item
+                            restoreState = true
                         }
                     }
                 }

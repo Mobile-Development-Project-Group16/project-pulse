@@ -23,6 +23,13 @@ import com.bda.projectpulse.models.UserRole
 import com.bda.projectpulse.ui.components.MainBottomBar
 import com.bda.projectpulse.ui.components.StatusChip
 import com.bda.projectpulse.ui.navigation.Screen
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.background
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,7 +47,7 @@ fun DashboardScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Dashboard") },
+                title = { Text("Admin Dashboard") },
                 actions = {
                     if (currentUser?.role == UserRole.ADMIN) {
                         IconButton(onClick = { navController.navigate(Screen.UserManagement.route) }) {
@@ -59,7 +66,7 @@ fun DashboardScreen(
                 unreadNotificationCount = uiState.unreadNotificationCount
             )
         }
-    ) { _ ->
+    ) { padding ->
         if (uiState.isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -68,15 +75,197 @@ fun DashboardScreen(
                 CircularProgressIndicator()
             }
         } else {
-            RoleDashboardScreen(
-                onNavigateToUserManagement = { navController.navigate(Screen.UserManagement.route) },
-                onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
-                onNavigateToProjects = { navController.navigate(Screen.Projects.route) },
-                onNavigateToTasks = { navController.navigate(Screen.Tasks.route) },
-                navController = navController,
-                viewModel = viewModel
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .background(Color(0xFFF3F4F6))
+            ) {
+                // Header
+                Text(
+                    text = "Welcome back, Admin",
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1F2937)
+                    ),
+                    modifier = Modifier.padding(16.dp)
+                )
+
+                // Stats
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    contentPadding = PaddingValues(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    item {
+                        StatCard(
+                            title = "Total Users",
+                            value = uiState.stats.totalUsers.toString(),
+                            icon = Icons.Default.People,
+                            color = Color(0xFF2563EB)
+                        )
+                    }
+                    item {
+                        StatCard(
+                            title = "Total Projects",
+                            value = uiState.stats.totalProjects.toString(),
+                            icon = Icons.Default.Folder,
+                            color = Color(0xFF10B981)
+                        )
+                    }
+                    item {
+                        StatCard(
+                            title = "Active Projects",
+                            value = uiState.stats.activeProjects.toString(),
+                            icon = Icons.Default.CheckCircle,
+                            color = Color(0xFFF59E0B)
+                        )
+                    }
+                    item {
+                        StatCard(
+                            title = "Pending Tasks",
+                            value = uiState.stats.pendingTasks.toString(),
+                            icon = Icons.Default.Assignment,
+                            color = Color(0xFFEF4444)
+                        )
+                    }
+                }
+
+                // Menu Options
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    MenuOption(
+                        title = "User Management",
+                        description = "Manage users, roles & permissions",
+                        icon = Icons.Default.ManageAccounts,
+                        onClick = { navController.navigate(Screen.UserManagement.route) }
+                    )
+                    MenuOption(
+                        title = "Analytics",
+                        description = "View detailed reports & metrics",
+                        icon = Icons.Default.Analytics,
+                        onClick = { /* Navigate to Analytics */ }
+                    )
+                    MenuOption(
+                        title = "Settings",
+                        description = "Configure app preferences",
+                        icon = Icons.Default.Settings,
+                        onClick = { navController.navigate(Screen.Settings.route) }
+                    )
+                }
+
+                // Recent Activity
+                Text(
+                    text = "Recent Activity",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF1F2937)
+                    ),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+                LazyColumn(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item {
+                        ActivityItem(
+                            title = "New User Registration",
+                            description = "John Smith joined the platform",
+                            timeAgo = "2 minutes ago"
+                        )
+                    }
+                    item {
+                        ActivityItem(
+                            title = "Project Updated",
+                            description = "Marketing Campaign 2024 was modified",
+                            timeAgo = "1 hour ago"
+                        )
+                    }
+                    item {
+                        ActivityItem(
+                            title = "Task Completed",
+                            description = "Website redesign project milestone achieved",
+                            timeAgo = "3 hours ago"
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MenuOption(title: String, description: String, icon: ImageVector, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White, RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = Color(0xFF2563EB),
+            modifier = Modifier.size(32.dp)
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Column {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF1F2937)
+                )
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = Color(0xFF6B7280)
+                )
             )
         }
+    }
+}
+
+@Composable
+fun ActivityItem(title: String, description: String, timeAgo: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White, RoundedCornerShape(8.dp))
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF1F2937)
+                )
+            )
+            Text(
+                text = timeAgo,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = Color(0xFF9CA3AF)
+                )
+            )
+        }
+        Text(
+            text = description,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = Color(0xFF6B7280)
+            ),
+            modifier = Modifier.padding(top = 4.dp)
+        )
     }
 }
 

@@ -27,20 +27,44 @@ class TeamRepository @Inject constructor(
 
         val teamMember = user.copy(role = role)
         
+        // Add to team_members subcollection
         firestore.collection("projects")
             .document(projectId)
             .collection("team_members")
             .document(userId)
             .set(teamMember)
             .await()
+            
+        // Update project's teamMembers array
+        firestore.collection("projects")
+            .document(projectId)
+            .update(
+                mapOf(
+                    "teamMembers" to com.google.firebase.firestore.FieldValue.arrayUnion(userId),
+                    "updatedAt" to com.google.firebase.Timestamp.now()
+                )
+            )
+            .await()
     }
 
     suspend fun removeTeamMember(projectId: String, userId: String) {
+        // Remove from team_members subcollection
         firestore.collection("projects")
             .document(projectId)
             .collection("team_members")
             .document(userId)
             .delete()
+            .await()
+            
+        // Update project's teamMembers array
+        firestore.collection("projects")
+            .document(projectId)
+            .update(
+                mapOf(
+                    "teamMembers" to com.google.firebase.firestore.FieldValue.arrayRemove(userId),
+                    "updatedAt" to com.google.firebase.Timestamp.now()
+                )
+            )
             .await()
     }
 
