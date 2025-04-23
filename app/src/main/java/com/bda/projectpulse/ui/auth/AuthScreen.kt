@@ -1,15 +1,29 @@
 package com.bda.projectpulse.ui.auth
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.bda.projectpulse.R
 import com.bda.projectpulse.models.UserRole
 import androidx.compose.material3.ExperimentalMaterial3Api
 
@@ -30,151 +44,241 @@ fun AuthScreen(
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .background(Color.White)
     ) {
-        Text(
-            text = if (formState.isRegistering) "Register" else "Login",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
+            // Logo and Welcome
+            Spacer(modifier = Modifier.height(80.dp))
+            
+            Image(
+                painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                contentDescription = "App Icon",
+                modifier = Modifier.size(64.dp),
+                colorFilter = null
+            )
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Text(
+                text = "Project Pulse",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF2563EB)
+                ),
+                modifier = Modifier.padding(top = 16.dp)
+            )
 
-        // Display error message if exists
-        formState.error?.let { error ->
-            Card(
+            Text(
+                text = if (formState.isRegistering) "Create Account" else "Welcome back",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.SemiBold
+                ),
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Text(
+                text = if (formState.isRegistering) "Please sign up to continue" else "Please sign in to continue",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = Color.Gray
+                ),
+                modifier = Modifier.padding(top = 4.dp, bottom = 32.dp)
+            )
+
+            // Error message if exists
+            formState.error?.let { error ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFFFEBEE)
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Error,
+                            contentDescription = "Error",
+                            tint = Color(0xFFD32F2F)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = error,
+                            color = Color(0xFFD32F2F),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+
+            // Email Field
+            OutlinedTextField(
+                value = formState.email,
+                onValueChange = viewModel::updateEmail,
+                label = { Text("Email") },
+                leadingIcon = {
+                    Icon(Icons.Default.Email, contentDescription = "Email", tint = Color.Gray)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer
+                isError = formState.error != null,
+                shape = RoundedCornerShape(16.dp),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Color(0xFF2563EB),
+                    unfocusedBorderColor = Color(0xFFE5E7EB)
                 )
-            ) {
+            )
+
+            // Password Field
+            OutlinedTextField(
+                value = formState.password,
+                onValueChange = viewModel::updatePassword,
+                label = { Text("Password") },
+                leadingIcon = {
+                    Icon(Icons.Default.Lock, contentDescription = "Password", tint = Color.Gray)
+                },
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                            tint = Color.Gray
+                        )
+                    }
+                },
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                isError = formState.error != null,
+                shape = RoundedCornerShape(16.dp),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Color(0xFF2563EB),
+                    unfocusedBorderColor = Color(0xFFE5E7EB)
+                )
+            )
+
+            // Display Name Field (only show in register mode)
+            if (formState.isRegistering) {
+                OutlinedTextField(
+                    value = formState.displayName,
+                    onValueChange = viewModel::updateDisplayName,
+                    label = { Text("Display Name") },
+                    leadingIcon = {
+                        Icon(Icons.Default.Person, contentDescription = "Display Name", tint = Color.Gray)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    isError = formState.error != null,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = Color(0xFF2563EB),
+                        unfocusedBorderColor = Color(0xFFE5E7EB)
+                    )
+                )
+
+                // Role Selection
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Error,
-                        contentDescription = "Error",
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    availableRoles.forEach { role ->
+                        FilterChip(
+                            selected = formState.role == role,
+                            onClick = { viewModel.updateRole(role) },
+                            label = { Text(role.name) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Color(0xFF2563EB),
+                                selectedLabelColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                    }
                 }
             }
-        }
 
-        OutlinedTextField(
-            value = formState.email,
-            onValueChange = viewModel::updateEmail,
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth(),
-            isError = formState.error != null,
-            supportingText = if (formState.error != null) {
-                { Text(formState.error!!) }
-            } else null
-        )
+            Spacer(modifier = Modifier.height(24.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = formState.password,
-            onValueChange = viewModel::updatePassword,
-            label = { Text("Password") },
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            trailingIcon = {
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(
-                        imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                        contentDescription = if (passwordVisible) "Hide password" else "Show password"
-                    )
-                }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            isError = formState.error != null,
-            supportingText = if (formState.error != null) {
-                { Text(formState.error!!) }
-            } else null
-        )
-
-        if (formState.isRegistering) {
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            OutlinedTextField(
-                value = formState.displayName,
-                onValueChange = viewModel::updateDisplayName,
-                label = { Text("Display Name") },
-                modifier = Modifier.fillMaxWidth(),
-                isError = formState.error != null
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Role Selection
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+            // Login/Register Button
+            Button(
+                onClick = { 
+                    if (formState.isRegistering) {
+                        viewModel.register(
+                            formState.email,
+                            formState.password,
+                            formState.displayName,
+                            onAuthSuccess
+                        )
+                    } else {
+                        viewModel.login(
+                            formState.email,
+                            formState.password,
+                            onAuthSuccess
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                enabled = !formState.isLoading,
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2563EB)
+                )
             ) {
-                availableRoles.forEach { role ->
-                    FilterChip(
-                        selected = formState.role == role,
-                        onClick = { viewModel.updateRole(role) },
-                        label = { Text(role.name) }
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = { 
-                if (formState.isRegistering) {
-                    viewModel.register(
-                        formState.email,
-                        formState.password,
-                        formState.displayName,
-                        onAuthSuccess
+                if (formState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White
                     )
                 } else {
-                    viewModel.login(
-                        formState.email,
-                        formState.password,
-                        onAuthSuccess
+                    Text(
+                        if (formState.isRegistering) "Sign Up" else "Sign In",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
+                        )
                     )
                 }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !formState.isLoading
-        ) {
-            if (formState.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            } else {
-                Text(if (formState.isRegistering) "Register" else "Login")
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        TextButton(
-            onClick = { viewModel.toggleAuthMode() },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(if (formState.isRegistering) "Already have an account? Login" else "Don't have an account? Register")
+            // Toggle Auth Mode Button
+            TextButton(
+                onClick = { viewModel.toggleAuthMode() },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    if (formState.isRegistering) "Already have an account? Sign In" else "Don't have an account? Sign Up",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = Color.Gray
+                    )
+                )
+                Text(
+                    if (formState.isRegistering) " Sign In" else " Sign Up",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF2563EB)
+                    )
+                )
+            }
         }
     }
 } 

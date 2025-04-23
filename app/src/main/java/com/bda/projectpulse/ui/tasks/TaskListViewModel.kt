@@ -36,7 +36,7 @@ class TaskListViewModel @Inject constructor(
         loadCurrentUser()
     }
 
-    private fun loadCurrentUser() {
+    fun loadCurrentUser() {
         viewModelScope.launch {
             try {
                 _currentUser.value = userRepository.getCurrentUser()

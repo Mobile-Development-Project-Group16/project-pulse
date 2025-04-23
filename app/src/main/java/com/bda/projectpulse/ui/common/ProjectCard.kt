@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -11,10 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.bda.projectpulse.models.Project
+import com.bda.projectpulse.models.ProjectStatus
 import com.bda.projectpulse.models.UserRole
 import java.text.SimpleDateFormat
 import java.util.*
-import com.bda.projectpulse.ui.components.StatusChip
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,7 +25,8 @@ fun ProjectCard(
     onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
     currentUserId: String? = null,
-    currentUserRole: UserRole? = null
+    currentUserRole: UserRole? = null,
+    progress: Float = 0.75f // Default progress value, should be provided by ViewModel
 ) {
     var showOptions by remember { mutableStateOf(false) }
     
@@ -38,7 +40,10 @@ fun ProjectCard(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(
             modifier = Modifier
@@ -48,22 +53,102 @@ fun ProjectCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = project.name,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = project.description,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                
+                // Status chip with new design
+                Surface(
+                    color = when (project.status) {
+                        ProjectStatus.ACTIVE -> MaterialTheme.colorScheme.primaryContainer
+                        ProjectStatus.COMPLETED -> MaterialTheme.colorScheme.secondaryContainer
+                        ProjectStatus.ON_HOLD -> MaterialTheme.colorScheme.tertiaryContainer
+                        else -> MaterialTheme.colorScheme.surfaceVariant
+                    },
+                    shape = MaterialTheme.shapes.extraLarge
+                ) {
+                    Text(
+                        text = project.status.name,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = when (project.status) {
+                            ProjectStatus.ACTIVE -> MaterialTheme.colorScheme.primary
+                            ProjectStatus.COMPLETED -> MaterialTheme.colorScheme.secondary
+                            ProjectStatus.ON_HOLD -> MaterialTheme.colorScheme.tertiary
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                    )
+                }
+            }
+            
+            // Date
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = project.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.weight(1f)
+                Icon(
+                    imageVector = Icons.Outlined.CalendarToday,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
-                if (canManageProject) {
-                    IconButton(onClick = { showOptions = !showOptions }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "More Options"
-                        )
-                    }
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+                        .format(project.startDate.toDate()),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            // Progress section
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Progress",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "${(progress * 100).toInt()}%",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
+                Spacer(modifier = Modifier.height(4.dp))
+                LinearProgressIndicator(
+                    progress = progress,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             }
             
             // Project options menu
@@ -71,17 +156,16 @@ fun ProjectCard(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                        .padding(top = 16.dp),
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (onEdit != null) {
-                        OutlinedButton(
+                        TextButton(
                             onClick = {
                                 showOptions = false
                                 onEdit()
-                            },
-                            modifier = Modifier.padding(end = 8.dp)
+                            }
                         ) {
                             Icon(
                                 Icons.Default.Edit,
@@ -94,12 +178,12 @@ fun ProjectCard(
                     }
                     
                     if (onDelete != null) {
-                        OutlinedButton(
+                        TextButton(
                             onClick = {
                                 showOptions = false
                                 onDelete()
                             },
-                            colors = ButtonDefaults.outlinedButtonColors(
+                            colors = ButtonDefaults.textButtonColors(
                                 contentColor = MaterialTheme.colorScheme.error
                             )
                         ) {
@@ -113,36 +197,6 @@ fun ProjectCard(
                         }
                     }
                 }
-            }
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = project.description,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                StatusChip(status = project.status)
-                
-                Text(
-                    text = "Team: ${project.teamMembers.size + 1}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-                
-                Text(
-                    text = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-                        .format(project.startDate.toDate()),
-                    style = MaterialTheme.typography.bodySmall
-                )
             }
         }
     }

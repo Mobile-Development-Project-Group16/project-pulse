@@ -4,8 +4,11 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -16,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,16 +46,20 @@ fun ProfileScreen(
     val unreadNotificationCount by viewModel.unreadNotificationsCount.collectAsStateWithLifecycle(initialValue = 0)
     
     var showChangePasswordDialog by remember { mutableStateOf(false) }
-    var showEditProfileDialog by remember { mutableStateOf(false) }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var newDisplayName by remember { mutableStateOf(currentUser?.displayName ?: "") }
+    var fullName by remember { mutableStateOf(currentUser?.displayName ?: "") }
     var passwordError by remember { mutableStateOf<String?>(null) }
     var showImagePicker by remember { mutableStateOf(false) }
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let { viewModel.uploadProfilePicture(it) }
+    }
+
+    // Update fullName when currentUser changes
+    LaunchedEffect(currentUser) {
+        fullName = currentUser?.displayName ?: ""
     }
 
     LaunchedEffect(Unit) {
@@ -66,10 +74,22 @@ fun ProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Profile") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                title = { 
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        }
+                        Text(
+                            text = "Profile",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                        Spacer(modifier = Modifier.width(48.dp))
                     }
                 }
             )
@@ -81,170 +101,232 @@ fun ProfileScreen(
             )
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Profile Picture Section
-            Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .padding(16.dp)
-            ) {
-                if (currentUser?.photoUrl != null) {
-                    Image(
-                        painter = rememberAsyncImagePainter(currentUser?.photoUrl),
-                        contentDescription = "Profile Picture",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_profile_placeholder),
-                        contentDescription = "Default Profile Picture",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-                
-                IconButton(
-                    onClick = { imagePickerLauncher.launch("image/*") },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .size(40.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CameraAlt,
-                        contentDescription = "Change Profile Picture"
-                    )
-                }
-            }
-
-            // User Info Card
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = currentUser?.displayName ?: "No Name",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = currentUser?.email ?: "No Email",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Role: ${currentUser?.role ?: "User"}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-
-            // Action Buttons
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                Button(
-                    onClick = { showEditProfileDialog = true },
-                    modifier = Modifier.fillMaxWidth()
+                // Profile Picture Section
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = null,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    Text("Edit Profile")
-                }
-
-                Button(
-                    onClick = { showChangePasswordDialog = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = null,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    Text("Change Password")
-                }
-
-                Button(
-                    onClick = { navController.navigate(Screen.Notifications.route) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Notifications,
-                        contentDescription = null,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    Text("Notifications")
-                    if (unreadNotificationCount > 0) {
-                        Badge(
-                            modifier = Modifier.padding(start = 8.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(112.dp)
+                            .clip(CircleShape)
+                    ) {
+                        if (currentUser?.photoUrl != null) {
+                            AsyncImage(
+                                model = currentUser?.photoUrl,
+                                contentDescription = "Profile Picture",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_profile_placeholder),
+                                contentDescription = "Default Profile Picture",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                        
+                        IconButton(
+                            onClick = { imagePickerLauncher.launch("image/*") },
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .size(40.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.primary,
+                                    CircleShape
+                                )
                         ) {
-                            Text(unreadNotificationCount.toString())
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = "Change Profile Picture",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
                         }
                     }
-                }
-
-                if (currentUser?.role == UserRole.ADMIN) {
-                    Button(
-                        onClick = { navController.navigate(Screen.AdminSettings.route) },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = null,
-                            modifier = Modifier.padding(end = 8.dp)
+                    TextButton(
+                        onClick = { imagePickerLauncher.launch("image/*") },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary
                         )
-                        Text("Admin Settings")
+                    ) {
+                        Text("Change Photo")
                     }
                 }
 
-                Button(
-                    onClick = {
-                        viewModel.logout()
-                        onSignOut()
-                    },
+                // Form Section
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    )
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Logout,
-                        contentDescription = null,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    Text("Logout")
-                }
-            }
+                    // Full Name Field
+                    Column {
+                        Text(
+                            text = "Full Name",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Medium
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        OutlinedTextField(
+                            value = fullName,
+                            onValueChange = { fullName = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = true,
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                disabledBorderColor = MaterialTheme.colorScheme.outline,
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                    }
 
-            // Error Message
-            error?.let { errorMessage ->
-                Text(
-                    text = errorMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
+                    // Email Field
+                    Column {
+                        Text(
+                            text = "Email Address",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Medium
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        OutlinedTextField(
+                            value = currentUser?.email ?: "",
+                            onValueChange = { },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = false,
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                disabledBorderColor = MaterialTheme.colorScheme.outline,
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                    }
+
+                    // Password Field
+                    Column {
+                        Text(
+                            text = "Password",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Medium
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        OutlinedTextField(
+                            value = "••••••••",
+                            onValueChange = { },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = false,
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                disabledBorderColor = MaterialTheme.colorScheme.outline,
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            trailingIcon = {
+                                IconButton(onClick = { showChangePasswordDialog = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = "Change Password"
+                                    )
+                                }
+                            }
+                        )
+                    }
+
+                    // Role Field
+                    Column {
+                        Text(
+                            text = "Role",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Medium
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        OutlinedTextField(
+                            value = currentUser?.role?.name ?: "User",
+                            onValueChange = { },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = false,
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                disabledTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                disabledBorderColor = MaterialTheme.colorScheme.outline,
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                    }
+                }
+
+                // Action Buttons
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(
+                        onClick = { 
+                            viewModel.updateProfile(fullName)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text("Save Changes")
+                    }
+
+                    if (currentUser?.role == UserRole.ADMIN) {
+                        Button(
+                            onClick = { navController.navigate(Screen.AdminSettings.route) },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                contentColor = MaterialTheme.colorScheme.primary
+                            ),
+                            border = ButtonDefaults.outlinedButtonBorder
+                        ) {
+                            Text("Admin Settings")
+                        }
+                    }
+
+                    Button(
+                        onClick = {
+                            viewModel.logout()
+                            onSignOut()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
+                        border = ButtonDefaults.outlinedButtonBorder
+                    ) {
+                        Text("Logout")
+                    }
+                }
+
+                // Error Message
+                error?.let { errorMessage ->
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
             }
         }
     }
@@ -299,37 +381,6 @@ fun ProfileScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showChangePasswordDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    // Edit Profile Dialog
-    if (showEditProfileDialog) {
-        AlertDialog(
-            onDismissRequest = { showEditProfileDialog = false },
-            title = { Text("Edit Profile") },
-            text = {
-                OutlinedTextField(
-                    value = newDisplayName,
-                    onValueChange = { newDisplayName = it },
-                    label = { Text("Display Name") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.updateProfile(newDisplayName)
-                        showEditProfileDialog = false
-                    }
-                ) {
-                    Text("Save")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showEditProfileDialog = false }) {
                     Text("Cancel")
                 }
             }

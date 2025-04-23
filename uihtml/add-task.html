@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Task Assignment</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-gray-900">
+  <!-- Header -->
+  <div class="flex items-center px-4 py-4 border-b">
+    <button class="text-xl mr-2">←</button>
+    <h1 class="text-lg font-semibold">Task Assignment</h1>
+  </div>
+
+  <!-- Form -->
+  <form class="px-4 py-6 space-y-6">
+    <!-- Task Title -->
+    <div>
+      <label class="block text-sm font-medium mb-1">Task Title</label>
+      <input
+        type="text"
+        placeholder="Enter task title"
+        class="w-full border rounded-xl px-4 py-2 text-sm placeholder-gray-400"
+      />
+    </div>
+
+    <!-- Description -->
+    <div>
+      <label class="block text-sm font-medium mb-1">Description</label>
+      <textarea
+        rows="4"
+        placeholder="Enter task description"
+        class="w-full border rounded-xl px-4 py-2 text-sm placeholder-gray-400"
+      ></textarea>
+    </div>
+
+    <!-- Assignee -->
+    <div>
+      <label class="block text-sm font-medium mb-1">Select Assignee</label>
+      <div class="relative">
+        <select class="w-full border rounded-xl px-4 py-2 text-sm appearance-none">
+          <option selected>Select team member</option>
+          <option>Sarah</option>
+          <option>Mike</option>
+          <option>Anna</option>
+        </select>
+        <div class="absolute top-2 right-3 text-gray-500 pointer-events-none">▼</div>
+      </div>
+    </div>
+
+    <!-- Deadline -->
+    <div>
+      <label class="block text-sm font-medium mb-1">Deadline</label>
+      <div class="relative">
+        <input
+          type="date"
+          class="w-full border rounded-xl px-4 py-2 text-sm"
+        />
+        <div class="absolute top-2 right-3 text-gray-500 pointer-events-none">
+          📅
+        </div>
+      </div>
+    </div>
+
+    <!-- Priority -->
+    <div>
+      <label class="block text-sm font-medium mb-1">Priority Level</label>
+      <div class="flex justify-between bg-gray-100 p-2 rounded-xl">
+        <label class="flex items-center space-x-1">
+          <input type="radio" name="priority" class="hidden peer" checked />
+          <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+          <span class="text-sm peer-checked:font-semibold">Low</span>
+        </label>
+        <label class="flex items-center space-x-1">
+          <input type="radio" name="priority" class="hidden peer" />
+          <span class="w-2 h-2 bg-yellow-500 rounded-full"></span>
+          <span class="text-sm peer-checked:font-semibold">Medium</span>
+        </label>
+        <label class="flex items-center space-x-1">
+          <input type="radio" name="priority" class="hidden peer" />
+          <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+          <span class="text-sm peer-checked:font-semibold">High</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Save Button -->
+    <div>
+      <button
+        type="submit"
+        class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold text-sm"
+      >
+        Save Task
+      </button>
+    </div>
+  </form>
+</body>
+</html>

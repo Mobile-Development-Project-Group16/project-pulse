@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Profile</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white min-h-screen px-4 pt-10">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <button class="text-2xl">&#8592;</button>
+    <h1 class="text-xl font-semibold">Profile</h1>
+    <div class="w-6"></div>
+  </div>
+
+  <!-- Profile Photo -->
+  <div class="flex flex-col items-center mb-6">
+    <div class="relative w-28 h-28">
+      <img src="Profile@4x.png" alt="Profile" class="rounded-full object-cover w-28 h-28 border-2 border-gray-300">
+      <button class="absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full">
+        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M4 4h4l2-2h4l2 2h4a2 2 0 012 2v2H2V6a2 2 0 012-2zm0 4v12a2 2 0 002 2h12a2 2 0 002-2V8H4zm8 2a4 4 0 110 8 4 4 0 010-8z"/>
+        </svg>
+      </button>
+    </div>
+    <button class="mt-2 text-blue-600 font-medium">Change Photo</button>
+  </div>
+
+  <!-- Form -->
+  <form class="space-y-4">
+    <div>
+      <label class="block text-gray-700 font-medium mb-1">Full Name</label>
+      <input type="text" value="Sarah Johnson" class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200">
+    </div>
+
+    <div>
+      <label class="block text-gray-700 font-medium mb-1">Email Address</label>
+      <input type="email" value="sarah.johnson@example.com" class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200">
+    </div>
+
+    <div>
+      <label class="block text-gray-700 font-medium mb-1">Password</label>
+      <div class="relative">
+        <input type="password" value="password" class="w-full border rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring focus:ring-blue-200">
+        <button type="button" class="absolute right-2 top-2.5 text-gray-500">
+          👁️
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-gray-700 font-medium mb-1">Role</label>
+      <input type="text" value="Product Designer" class="w-full border rounded-md px-3 py-2 text-gray-500 bg-gray-100 cursor-not-allowed" disabled>
+    </div>
+
+    <!-- Buttons -->
+    <div class="space-y-3 mt-6">
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md font-medium">Save Changes</button>
+      <button type="button" class="w-full border border-red-500 text-red-500 py-2 rounded-md font-medium">Logout</button>
+    </div>
+  </form>
+</body>
+</html>

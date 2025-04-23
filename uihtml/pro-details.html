@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Project Details</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-gray-900">
+  <!-- Header -->
+  <div class="flex justify-between items-center px-4 py-4 border-b">
+    <h1 class="text-lg font-semibold">Project Details</h1>
+    <div class="text-2xl">⋮</div>
+  </div>
+
+  <!-- Project Info -->
+  <div class="px-4 py-4 space-y-2">
+    <div class="flex items-center justify-between">
+      <h2 class="text-xl font-bold">Marketing Campaign Q4</h2>
+    </div>
+    <div class="flex items-center text-sm space-x-3">
+      <span class="bg-green-100 text-green-700 font-medium px-2 py-0.5 rounded-full text-xs">In Progress</span>
+      <div class="flex items-center text-gray-500 text-sm">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 4h10M5 21h14a2 2 0 002-2V7H3v12a2 2 0 002 2z"/>
+        </svg>
+        Due Dec 15, 2023
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="flex justify-between items-center text-sm mt-2">
+      <span class="font-medium">Progress</span>
+      <span class="text-gray-600">65%</span>
+    </div>
+    <div class="w-full bg-gray-200 rounded-full h-2">
+      <div class="bg-blue-500 h-2 rounded-full" style="width: 65%"></div>
+    </div>
+
+    <p class="text-gray-600 text-sm mt-2">
+      Comprehensive Q4 marketing campaign including social media, email, and content strategy
+    </p>
+  </div>
+
+  <!-- Team Members -->
+  <div class="px-4 mt-4">
+    <h3 class="font-semibold mb-2">Team Members</h3>
+    <div class="flex space-x-4 overflow-x-auto pb-2">
+      <div class="flex flex-col items-center text-center">
+        <img src="https://i.pravatar.cc/100?img=1" class="w-12 h-12 rounded-full" />
+        <span class="text-sm font-medium">Sarah</span>
+        <span class="text-xs text-gray-500">Lead</span>
+      </div>
+      <div class="flex flex-col items-center text-center">
+        <img src="https://i.pravatar.cc/100?img=2" class="w-12 h-12 rounded-full" />
+        <span class="text-sm font-medium">Mike</span>
+        <span class="text-xs text-gray-500">Designer</span>
+      </div>
+      <div class="flex flex-col items-center text-center">
+        <img src="https://i.pravatar.cc/100?img=3" class="w-12 h-12 rounded-full" />
+        <span class="text-sm font-medium">Anna</span>
+        <span class="text-xs text-gray-500">Developer</span>
+      </div>
+      <div class="flex flex-col items-center text-center">
+        <img src="https://i.pravatar.cc/100?img=4" class="w-12 h-12 rounded-full" />
+        <span class="text-sm font-medium">John</span>
+        <span class="text-xs text-gray-500">Marketing</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tasks Overview -->
+  <div class="px-4 mt-6">
+    <h3 class="font-semibold mb-2">Tasks Overview</h3>
+    <div class="grid grid-cols-3 gap-3">
+      <div class="bg-gray-100 rounded-xl py-3 text-center">
+        <p class="text-2xl font-bold">12</p>
+        <p class="text-sm text-gray-500">Total Tasks</p>
+      </div>
+      <div class="bg-green-100 rounded-xl py-3 text-center">
+        <p class="text-2xl font-bold">8</p>
+        <p class="text-sm text-gray-500">Completed</p>
+      </div>
+      <div class="bg-blue-100 rounded-xl py-3 text-center">
+        <p class="text-2xl font-bold">4</p>
+        <p class="text-sm text-gray-500">In Progress</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="px-4 mt-6">
+    <h3 class="font-semibold mb-2">Task Timeline</h3>
+    <div class="space-y-4">
+      <div class="flex items-start space-x-3">
+        <div class="text-green-500 mt-1">✔️</div>
+        <div>
+          <p class="text-sm text-gray-500">Oct 1</p>
+          <p class="font-medium">Project Kickoff</p>
+        </div>
+      </div>
+      <div class="flex items-start space-x-3">
+        <div class="text-green-500 mt-1">✔️</div>
+        <div>
+          <p class="text-sm text-gray-500">Oct 15</p>
+          <p class="font-medium">Design Phase Complete</p>
+        </div>
+      </div>
+      <div class="flex items-start space-x-3">
+        <div class="text-gray-400 mt-1">⭕</div>
+        <div>
+          <p class="text-sm text-gray-500">Nov 1</p>
+          <p class="font-medium">Development Sprint</p>
+        </div>
+      </div>
+      <div class="flex items-start space-x-3">
+        <div class="text-gray-400 mt-1">⭕</div>
+        <div>
+          <p class="text-sm text-gray-500">Dec 15</p>
+          <p class="font-medium">Launch Campaign</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="px-4 mt-6 space-y-3 mb-6">
+    <button class="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2">
+      <span>🤖</span> Generate Content
+    </button>
+    <button class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2">
+      💬 Open Project Chat
+    </button>
+  </div>
+</body>
+</html>

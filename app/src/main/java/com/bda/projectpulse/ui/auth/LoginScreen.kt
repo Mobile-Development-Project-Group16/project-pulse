@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -44,36 +45,51 @@ fun LoginScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top
         ) {
-            // Logo
-            Image(
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = "App Logo",
+            // Logo and Welcome
+            Spacer(modifier = Modifier.height(80.dp))
+            
+            Box(
                 modifier = Modifier
-                    .size(100.dp)
-                    .padding(bottom = 24.dp)
-            )
+                    .size(48.dp)
+                    .background(Color(0xFF2563EB), RoundedCornerShape(16.dp))
+                    .padding(12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "App Logo",
+                    modifier = Modifier.size(24.dp),
+                    colorFilter = ColorFilter.tint(Color.White)
+                )
+            }
 
-            // Welcome Back Text
             Text(
-                text = "Welcome Back",
+                text = "Project Pulse",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp
+                    color = Color(0xFF2563EB)
                 ),
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier.padding(top = 16.dp)
+            )
+
+            Text(
+                text = "Welcome back",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.SemiBold
+                ),
+                modifier = Modifier.padding(top = 8.dp)
             )
 
             Text(
                 text = "Please sign in to continue",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    color = Color.Gray,
-                    fontSize = 16.sp
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = Color.Gray
                 ),
-                modifier = Modifier.padding(bottom = 32.dp)
+                modifier = Modifier.padding(top = 4.dp, bottom = 32.dp)
             )
 
             // Error message if exists
@@ -120,10 +136,14 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
                 isError = formState.error != null,
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = Color.LightGray
+                    focusedBorderColor = Color(0xFF2563EB),
+                    unfocusedBorderColor = Color(0xFFE5E7EB),
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    focusedLabelColor = Color(0xFF2563EB),
+                    unfocusedLabelColor = Color.Gray
                 )
             )
 
@@ -149,10 +169,14 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .padding(bottom = 8.dp),
                 isError = formState.error != null,
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = Color.LightGray
+                    focusedBorderColor = Color(0xFF2563EB),
+                    unfocusedBorderColor = Color(0xFFE5E7EB),
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    focusedLabelColor = Color(0xFF2563EB),
+                    unfocusedLabelColor = Color.Gray
                 )
             )
 
@@ -163,7 +187,7 @@ fun LoginScreen(
             ) {
                 Text(
                     "Forgot Password?",
-                    color = MaterialTheme.colorScheme.primary,
+                    color = Color(0xFF2563EB),
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Medium
                     )
@@ -185,9 +209,12 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 enabled = !formState.isLoading,
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = Color(0xFF2563EB),
+                    contentColor = Color.White,
+                    disabledContainerColor = Color(0xFFE5E7EB),
+                    disabledContentColor = Color.Gray
                 )
             ) {
                 if (formState.isLoading) {
@@ -197,16 +224,16 @@ fun LoginScreen(
                     )
                 } else {
                     Text(
-                        "Login",
+                        "Sign In",
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             color = Color.White
                         )
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Sign Up Link
             Row(
@@ -224,8 +251,8 @@ fun LoginScreen(
                     Text(
                         "Sign Up",
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF2563EB)
                         )
                     )
                 }

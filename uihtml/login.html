@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Pulse Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-white min-h-screen flex flex-col items-center justify-start pt-20 px-4 font-sans">
+    <!-- Logo and Welcome -->
+    <div class="flex flex-col items-center mb-10">
+      <div class="bg-blue-600 p-3 rounded-2xl">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <h1 class="text-3xl font-bold text-blue-600 mt-4">Project Pulse</h1>
+      <h2 class="text-xl font-semibold mt-2">Welcome back</h2>
+      <p class="text-gray-500 text-sm mt-1">Please sign in to continue</p>
+    </div>
+
+    <!-- Form -->
+    <div class="w-full max-w-sm">
+      <!-- Email -->
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-800 mb-1">Email</label>
+        <div class="relative">
+          <input
+            type="email"
+            placeholder="Enter your email"
+            class="w-full py-3 pl-10 pr-4 rounded-xl bg-gray-50 border border-gray-200 text-sm placeholder-gray-400 focus:outline-none"
+          />
+          <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12H8m8 0H8m8 0H8m0 0a4 4 0 100-8 4 4 0 000 8z" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-800 mb-1">Password</label>
+        <div class="relative">
+          <input
+            type="password"
+            placeholder="Enter your password"
+            class="w-full py-3 pl-10 pr-10 rounded-xl bg-gray-50 border border-gray-200 text-sm placeholder-gray-400 focus:outline-none"
+          />
+          <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0-1.1.9-2 2-2s2 .9 2 2v2a2 2 0 01-2 2c-.2 0-.4 0-.6-.1" />
+          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12h.01M12 12h.01M9 12h.01M21 12c0 4.418-7.164 8-9 8s-9-3.582-9-8 7.164-8 9-8 9 3.582 9 8z" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Sign In Button -->
+      <button class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition">
+        Sign In
+      </button>
+
+      <!-- Links -->
+      <div class="text-center mt-4">
+        <a href="#" class="text-sm text-blue-600 font-medium">Forgot Password?</a>
+      </div>
+
+      <div class="text-center mt-2 text-sm text-gray-600">
+        Don't have an account?
+        <a href="#" class="text-blue-600 font-medium">Sign Up</a>
+      </div>
+    </div>
+  </body>
+</html>

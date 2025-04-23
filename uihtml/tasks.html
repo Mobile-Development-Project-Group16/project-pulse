@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tasks</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-gray-900">
+  <!-- Header -->
+  <div class="px-4 py-5 flex justify-between items-center">
+    <div>
+      <h1 class="text-2xl font-bold">Tasks</h1>
+      <p class="text-sm text-gray-500">12 tasks</p>
+    </div>
+    <button class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-light">+</button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex border-b border-gray-200 overflow-x-auto">
+    <button class="px-4 py-2 font-medium text-blue-600 border-b-2 border-blue-600">All Tasks</button>
+    <button class="px-4 py-2 text-gray-500 whitespace-nowrap">To Do</button>
+    <button class="px-4 py-2 text-gray-500 whitespace-nowrap">In Progress</button>
+    <button class="px-4 py-2 text-gray-500 whitespace-nowrap">In Review</button>
+    <button class="px-4 py-2 text-gray-500 whitespace-nowrap">Approved</button>
+    <button class="px-4 py-2 text-gray-500 whitespace-nowrap">Rejected</button>
+  </div>
+
+  <div class="px-4 py-3 space-y-6">
+    <!-- TO DO GROUP -->
+    <div>
+      <div class="flex justify-between items-center mb-2">
+        <h2 class="font-semibold text-lg">To Do</h2>
+        <span class="text-sm text-gray-500">3 tasks</span>
+      </div>
+
+      <!-- Task Card -->
+      <div class="bg-white shadow rounded-xl p-4 space-y-2 border">
+        <p class="font-semibold">Website Redesign</p>
+        <div class="flex items-center text-sm text-gray-500 gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 4h10M5 21h14a2 2 0 002-2V7H3v12a2 2 0 002 2z"/>
+          </svg>
+          Sep 30, 2023
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <img src="https://i.pravatar.cc/40?img=12" class="w-6 h-6 rounded-full" alt="Sarah" />
+            <span class="text-sm text-gray-700">Sarah Chen</span>
+          </div>
+          <span class="bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">High</span>
+        </div>
+      </div>
+
+      <!-- Content Strategy -->
+      <div class="bg-white shadow rounded-xl p-4 space-y-2 border mt-3">
+        <p class="font-semibold">Content Strategy</p>
+        <div class="flex items-center text-sm text-gray-500 gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 4h10M5 21h14a2 2 0 002-2V7H3v12a2 2 0 002 2z"/>
+          </svg>
+          Oct 5, 2023
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <img src="https://i.pravatar.cc/40?img=15" class="w-6 h-6 rounded-full" alt="Mike" />
+            <span class="text-sm text-gray-700">Mike Johnson</span>
+          </div>
+          <span class="bg-yellow-400 text-white text-xs font-semibold px-2 py-0.5 rounded-full">Medium</span>
+        </div>
+      </div>
+
+      <!-- Marketing Plan -->
+      <div class="bg-white shadow rounded-xl p-4 space-y-2 border mt-3">
+        <p class="font-semibold">Marketing Plan</p>
+        <div class="flex items-center text-sm text-gray-500 gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 4h10M5 21h14a2 2 0 002-2V7H3v12a2 2 0 002 2z"/>
+          </svg>
+          Oct 8, 2023
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <img src="https://i.pravatar.cc/40?img=20" class="w-6 h-6 rounded-full" alt="Lisa" />
+            <span class="text-sm text-gray-700">Lisa Wong</span>
+          </div>
+          <span class="bg-green-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">Low</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- IN PROGRESS GROUP -->
+    <div>
+      <div class="flex justify-between items-center mb-2">
+        <h2 class="font-semibold text-lg">In Progress</h2>
+        <span class="text-sm text-gray-500">2 tasks</span>
+      </div>
+
+      <!-- User Research -->
+      <div class="bg-white shadow rounded-xl p-4 space-y-2 border">
+        <p class="font-semibold">User Research</p>
+        <div class="flex items-center text-sm text-gray-500 gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 4h10M5 21h14a2 2 0 002-2V7H3v12a2 2 0 002 2z"/>
+          </svg>
+          Sep 28, 2023
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <img src="https://i.pravatar.cc/40?img=10" class="w-6 h-6 rounded-full" alt="Alex" />
+            <span class="text-sm text-gray-700">Alex Wong</span>
+          </div>
+          <span class="bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">High</span>
+        </div>
+      </div>
+
+      <!-- Wireframe Design -->
+      <div class="bg-white shadow rounded-xl p-4 space-y-2 border mt-3">
+        <p class="font-semibold">Wireframe Design</p>
+        <div class="flex items-center text-sm text-gray-500 gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 4h10M5 21h14a2 2 0 002-2V7H3v12a2 2 0 002 2z"/>
+          </svg>
+          Oct 2, 2023
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <img src="https://i.pravatar.cc/40?img=18" class="w-6 h-6 rounded-full" alt="Emma" />
+            <span class="text-sm text-gray-700">Emma Smith</span>
+          </div>
+          <span class="bg-yellow-400 text-white text-xs font-semibold px-2 py-0.5 rounded-full">Medium</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Space -->
+  <div class="h-20"></div>
+</body>
+</html>

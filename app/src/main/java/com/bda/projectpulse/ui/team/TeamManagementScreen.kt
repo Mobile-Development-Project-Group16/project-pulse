@@ -15,6 +15,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bda.projectpulse.models.User
 import com.bda.projectpulse.models.UserRole
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,7 +29,12 @@ fun TeamManagementScreen(
     val availableUsers by viewModel.availableUsers.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     var showAddMemberDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadCurrentUser()
+    }
 
     LaunchedEffect(projectId) {
         viewModel.loadTeamMembers(projectId)
@@ -45,8 +51,10 @@ fun TeamManagementScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showAddMemberDialog = true }) {
-                        Icon(Icons.Default.PersonAdd, contentDescription = "Add Member")
+                    if (currentUser?.role == UserRole.ADMIN || currentUser?.role == UserRole.MANAGER) {
+                        IconButton(onClick = { showAddMemberDialog = true }) {
+                            Icon(Icons.Default.PersonAdd, contentDescription = "Add Member")
+                        }
                     }
                 }
             )
@@ -108,7 +116,8 @@ fun TeamManagementScreen(
             onAddMember = { userId ->
                 val user = availableUsers.find { it.uid == userId }
                 user?.let { 
-                    viewModel.addTeamMember(projectId, userId, it.role)
+                    viewModel.addTeamMember(projectId, userId)
+                    viewModel.loadTeamMembers(projectId)
                     showAddMemberDialog = false
                 }
             }
@@ -154,6 +163,7 @@ private fun AddTeamMemberDialog(
                         .heightIn(max = 200.dp)
                 ) {
                     items(filteredUsers) { user ->
+                        val isSelected = selectedUser?.uid == user.uid
                         ListItem(
                             headlineContent = { Text(user.displayName) },
                             supportingContent = { Text(user.email) },
@@ -163,9 +173,23 @@ private fun AddTeamMemberDialog(
                                     contentDescription = null
                                 )
                             },
-                            modifier = Modifier.clickable {
-                                selectedUser = user
-                            }
+                            trailingContent = {
+                                if (isSelected) {
+                                    Icon(
+                                        Icons.Default.Check,
+                                        contentDescription = "Selected",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            },
+                            modifier = Modifier
+                                .clickable {
+                                    selectedUser = if (isSelected) null else user
+                                }
+                                .background(
+                                    if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                                    else MaterialTheme.colorScheme.surface
+                                )
                         )
                     }
                 }

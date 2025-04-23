@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-gray-900">
+  <!-- Header -->
+  <div class="flex items-center px-4 py-4 border-b">
+    <button class="text-xl mr-2">←</button>
+    <h1 class="text-lg font-semibold">User Management</h1>
+  </div>
+
+  <!-- Search -->
+  <div class="px-4 py-4">
+    <input
+      type="text"
+      placeholder="Search users..."
+      class="w-full rounded-xl border px-4 py-2 text-sm bg-gray-100 placeholder-gray-400"
+    />
+  </div>
+
+  <!-- User List -->
+  <div class="space-y-4 px-4 pb-24">
+    <!-- User Card -->
+    <div class="flex items-center justify-between p-4 rounded-2xl shadow-sm border">
+      <div class="flex items-center gap-3">
+        <img src="https://i.pravatar.cc/40?img=1" class="rounded-full w-10 h-10" />
+        <div>
+          <h2 class="font-semibold">Sarah Johnson</h2>
+          <p class="text-sm text-gray-500">sarah.j@projectpulse.com</p>
+          <span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full inline-block mt-1">Admin</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="text-blue-600 text-xl">✏️</button>
+        <button class="text-red-500 text-xl">🗑️</button>
+      </div>
+    </div>
+
+    <!-- You can duplicate this card and change data for each user -->
+    <div class="flex items-center justify-between p-4 rounded-2xl shadow-sm border">
+      <div class="flex items-center gap-3">
+        <img src="https://i.pravatar.cc/40?img=2" class="rounded-full w-10 h-10" />
+        <div>
+          <h2 class="font-semibold">Michael Chen</h2>
+          <p class="text-sm text-gray-500">michael.c@projectpulse.com</p>
+          <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full inline-block mt-1">Project Manager</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="text-blue-600 text-xl">✏️</button>
+        <button class="text-red-500 text-xl">🗑️</button>
+      </div>
+    </div>
+
+    <!-- More users -->
+    <div class="flex items-center justify-between p-4 rounded-2xl shadow-sm border">
+      <div class="flex items-center gap-3">
+        <img src="https://i.pravatar.cc/40?img=3" class="rounded-full w-10 h-10" />
+        <div>
+          <h2 class="font-semibold">David Smith</h2>
+          <p class="text-sm text-gray-500">david.s@projectpulse.com</p>
+          <span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full inline-block mt-1">Team Member</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="text-blue-600 text-xl">✏️</button>
+        <button class="text-red-500 text-xl">🗑️</button>
+      </div>
+    </div>
+
+    <!-- Add more user cards here as needed -->
+
+  </div>
+
+  <!-- Floating Action Button -->
+  <button
+    class="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white text-3xl rounded-full shadow-lg"
+  >
+    +
+  </button>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat UI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+
+  <!-- Top Bar -->
+  <div class="flex items-center justify-between p-4 bg-white border-b">
+    <div>
+      <div class="text-sm text-gray-500">9:41</div>
+      <div class="font-semibold text-lg">Design System Project</div>
+      <div class="text-sm text-gray-500">8 members</div>
+    </div>
+    <div class="flex items-center space-x-1">
+      <img src="https://randomuser.me/api/portraits/women/44.jpg" class="w-8 h-8 rounded-full" alt="">
+      <img src="https://randomuser.me/api/portraits/men/33.jpg" class="w-8 h-8 rounded-full" alt="">
+      <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-xs text-gray-700 font-medium">+5</div>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div class="p-4 space-y-6">
+
+    <!-- Message 1 -->
+    <div>
+      <div class="flex items-center space-x-2">
+        <img src="https://randomuser.me/api/portraits/women/44.jpg" class="w-6 h-6 rounded-full" alt="">
+        <span class="font-semibold">Sarah Chen</span>
+      </div>
+      <div class="mt-1 bg-white p-3 rounded-lg shadow text-gray-800">I've updated the wireframes for the dashboard. Take a look when you can.</div>
+      <div class="text-xs text-gray-500 mt-1">9:45 AM</div>
+    </div>
+
+    <!-- Message 2 -->
+    <div>
+      <div class="flex items-center space-x-2">
+        <img src="https://randomuser.me/api/portraits/men/33.jpg" class="w-6 h-6 rounded-full" alt="">
+        <span class="font-semibold">James Wilson</span>
+      </div>
+      <div class="mt-1 bg-white p-3 rounded-lg shadow text-gray-800">Looks great! I'll review and provide feedback by EOD.</div>
+      <div class="text-xs text-gray-500 mt-1">10:15 AM</div>
+    </div>
+
+    <!-- Message 3 (Own Message) -->
+    <div class="text-right">
+      <div class="inline-block bg-blue-600 text-white p-3 rounded-lg shadow">Thanks team! I've also attached the updated style guide for reference.</div>
+      <div class="text-xs text-gray-500 mt-1">10:30 AM</div>
+    </div>
+
+  </div>
+
+  <!-- Message Input -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-3 flex items-center space-x-2">
+    <button class="text-gray-500">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828L18 10.828a4 4 0 10-5.656-5.656L9 8" />
+      </svg>
+    </button>
+    <input type="text" placeholder="Type a message..." class="flex-1 p-2 border rounded-full focus:outline-none focus:ring focus:ring-blue-300">
+    <button class="text-blue-600">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform rotate-45" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M2.94 2.94a1.5 1.5 0 012.12 0l12 12a1.5 1.5 0 01-2.12 2.12l-12-12a1.5 1.5 0 010-2.12zM13.828 3.172a4 4 0 015.656 5.656l-6.586 6.586a2 2 0 01-2.828-2.828l6.586-6.586a1.5 1.5 0 10-2.122-2.122l-6.586 6.586a4 4 0 105.656 5.656l6.586-6.586a6 6 0 10-8.485-8.485L3.172 6.343a2 2 0 102.828 2.828L13.828 3.172z"/>
+      </svg>
+    </button>
+  </div>
+
+</body>
+</html>

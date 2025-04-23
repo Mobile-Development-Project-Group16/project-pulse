@@ -14,7 +14,27 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bda.projectpulse.models.User
 import com.bda.projectpulse.models.UserRole
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.border
+import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.outlined.Search
 import com.bda.projectpulse.ui.components.ErrorMessage
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +49,7 @@ fun UserManagementScreen(
     var showAddUserDialog by remember { mutableStateOf(false) }
     var selectedUser by remember { mutableStateOf<User?>(null) }
     var showEditRoleDialog by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         viewModel.loadUsers()
@@ -43,45 +64,70 @@ fun UserManagementScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                },
-                actions = {
-                    IconButton(onClick = { showAddUserDialog = true }) {
-                        Icon(Icons.Default.PersonAdd, contentDescription = "Add User")
-                    }
                 }
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showAddUserDialog = true },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add User")
+            }
         }
     ) { padding ->
-        if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else if (error != null) {
-            ErrorMessage(
-                message = error ?: "Unknown error occurred",
-                onRetry = { viewModel.loadUsers() }
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(users) { user ->
-                    UserCard(
-                        user = user,
-                        currentUser = currentUser,
-                        onEditRole = {
-                            selectedUser = user
-                            showEditRoleDialog = true
-                        },
-                        onDeleteUser = { viewModel.deleteUser(user.uid) }
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            } else if (error != null) {
+                ErrorMessage(
+                    message = error ?: "Unknown error occurred",
+                    onRetry = { viewModel.loadUsers() }
+                )
+            } else {
+                Column(
+                    modifier = Modifier
+                        .padding(padding)
+                        .fillMaxSize()
+                ) {
+                    // Search Bar
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text("Search users...") },
+                        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = "Search") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        shape = MaterialTheme.shapes.large
                     )
+
+                    // User List
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(users.filter { user ->
+                            searchQuery.isEmpty() || 
+                            user.displayName.contains(searchQuery, ignoreCase = true) ||
+                            user.email.contains(searchQuery, ignoreCase = true)
+                        }) { user ->
+                            UserCard(
+                                user = user,
+                                currentUser = currentUser,
+                                onEditRole = {
+                                    selectedUser = user
+                                    showEditRoleDialog = true
+                                },
+                                onDeleteUser = { viewModel.deleteUser(user.uid) }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -122,43 +168,102 @@ private fun UserCard(
     onDeleteUser: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = MaterialTheme.shapes.large
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // User Avatar
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            MaterialTheme.colorScheme.primaryContainer,
+                            CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = user.displayName.first().toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+
+                // User Info
                 Column {
                     Text(
                         text = user.displayName,
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold
+                        )
                     )
                     Text(
                         text = user.email,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     )
                     Text(
-                        text = "Role: ${user.role.name}",
-                        style = MaterialTheme.typography.bodySmall
+                        text = user.role.name,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = when (user.role) {
+                                UserRole.ADMIN -> MaterialTheme.colorScheme.error
+                                UserRole.MANAGER -> MaterialTheme.colorScheme.primary
+                                else -> MaterialTheme.colorScheme.secondary
+                            }
+                        ),
+                        modifier = Modifier
+                            .padding(top = 4.dp)
+                            .background(
+                                when (user.role) {
+                                    UserRole.ADMIN -> MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
+                                    UserRole.MANAGER -> MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                    else -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
+                                },
+                                MaterialTheme.shapes.small
+                            )
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
                     )
                 }
-                
-                if (currentUser?.role == UserRole.ADMIN && user.uid != currentUser.uid) {
-                    Row {
-                        IconButton(onClick = onEditRole) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit Role")
-                        }
-                        IconButton(onClick = onDeleteUser) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = "Delete User",
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                        }
+            }
+
+            // Action Buttons
+            if (currentUser?.role == UserRole.ADMIN && user.uid != currentUser.uid) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    IconButton(
+                        onClick = onEditRole,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = "Edit Role",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    IconButton(
+                        onClick = onDeleteUser,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Delete User",
+                            tint = MaterialTheme.colorScheme.error
+                        )
                     }
                 }
             }
@@ -176,63 +281,203 @@ private fun AddUserDialog(
     var password by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var selectedRole by remember { mutableStateOf(UserRole.USER) }
+    var showPassword by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add New User") },
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Text(
+                    "Add New User",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.SemiBold
+                    )
+                )
+                Spacer(modifier = Modifier.size(24.dp))
+            }
+        },
         text = {
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    singleLine = true
-                )
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Password") },
-                    singleLine = true
-                )
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Display Name") },
-                    singleLine = true
-                )
-                Text("Select Role:", modifier = Modifier.padding(top = 8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    UserRole.values().forEach { role ->
-                        FilterChip(
-                            selected = selectedRole == role,
-                            onClick = { selectedRole = role },
-                            label = { Text(role.name) }
+                // Full Name
+                Column {
+                    Text(
+                        "Full Name",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Medium
+                        ),
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        placeholder = { Text("Enter full name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.large,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary
                         )
+                    )
+                }
+
+                // Email
+                Column {
+                    Text(
+                        "Email Address",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Medium
+                        ),
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        placeholder = { Text("Enter email address") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.large,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                }
+
+                // Password
+                Column {
+                    Text(
+                        "Password",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Medium
+                        ),
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        placeholder = { Text("Enter password") },
+                        singleLine = true,
+                        visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(
+                                onClick = { showPassword = !showPassword },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    if (showPassword) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    contentDescription = if (showPassword) "Hide password" else "Show password",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.large,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                }
+
+                // User Role
+                Column {
+                    Text(
+                        "User Role",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Medium
+                        ),
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = it }
+                    ) {
+                        OutlinedTextField(
+                            value = selectedRole.name,
+                            onValueChange = { },
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(),
+                            shape = MaterialTheme.shapes.large,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                focusedBorderColor = MaterialTheme.colorScheme.primary
+                            )
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            UserRole.values().forEach { role ->
+                                DropdownMenuItem(
+                                    text = { Text(role.name) },
+                                    onClick = {
+                                        selectedRole = role
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
         },
         confirmButton = {
-            TextButton(
+            Button(
                 onClick = {
                     if (email.isNotBlank() && password.isNotBlank() && name.isNotBlank()) {
                         onAddUser(email, password, name, selectedRole)
                     }
-                }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = MaterialTheme.shapes.large,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
             ) {
-                Text("Add")
+                Text(
+                    "Save Changes",
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
+        dismissButton = null
     )
 }
 
